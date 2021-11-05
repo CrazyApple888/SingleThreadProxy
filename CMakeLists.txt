@@ -3,4 +3,4 @@ project(SingleThreadProxy)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(SingleThreadProxy main.cpp)
+add_executable(SingleThreadProxy main.cpp Logger.h Logger.cpp)
