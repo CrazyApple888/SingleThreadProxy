@@ -1,0 +1,10 @@
+#ifndef SINGLETHREADPROXY_CACHE_H
+#define SINGLETHREADPROXY_CACHE_H
+
+
+class Cache {
+
+};
+
+
+#endif //SINGLETHREADPROXY_CACHE_H

@@ -1,18 +1,9 @@
 #include <iostream>
-#include <fstream>
-#include "Logger.h"
+#include "Proxy.h"
 
-int main() {
-    std::cout << "Hello, World!" << std::endl;
-    auto logger = new Logger(false, std::cout);
-    logger->info("AB", "A");
-    auto str = std::string("B");
-    logger->info("AB", str);
-    logger->debug("AB", "C");
-
-    std::ofstream file;
-    file.open("logs.txt");
-    auto file_logger = Logger(true, file);
-    file_logger.info("AB", "CCCC");
-    return 0;
+/// $ prog_name is_debug
+int main(int argc, char *argv[]) {
+    bool is_debug = (argc == 2 && strcmp("-d", argv[1]) == 0);
+    auto proxy = new Proxy(is_debug);
+    proxy->start(3444);
 }
