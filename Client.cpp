@@ -1,31 +1,40 @@
 #include "Client.h"
 
-///Handlers
-
 int onUrl(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     auto client = (Client*)parser->data;
     std::cout << "ZDAROVA onUrl" << std::endl;
+    if (1u != parser->method && 2u != parser->method) {
+        client->is_error = true;
+        return 1;
+    }
+    client->url.append(at, length);
+    client->getLogger().info(client->getTag(), "ON URL SUCCESSFUL");
+    return 0;
 }
 
 int onHeaderField(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     std::cout << "ZDAROVA onHeaderField" << std::endl;
+    return 0;
 }
 
 int onHeaderValue(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     std::cout << "ZDAROVA onHeaderValue" << std::endl;
+    return 0;
 }
 
 int onHeadersComplete(http_parser *parser) {
     //todo rewrite me
     std::cout << "ZDAROVA onHeadersComplete" << std::endl;
+    return 0;
 }
 
 int onBody(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     std::cout << "ZDAROVA onBody" << std::endl;
+    return 0;
 }
 
 void Client::execute(int event) {
@@ -41,7 +50,7 @@ Client::Client(int client_socket, bool is_debug, Proxy* proxy) : logger(*(new Lo
     this->proxy = proxy;
     TAG = std::string("Client " + std::to_string(client_socket));
 
-    ///---Initializing parser settings---
+    ///---------Initializing parser settings---------
     http_parser_settings_init(&settings);
     settings.on_url = onUrl;
     settings.on_header_field = onHeaderField;
@@ -49,7 +58,7 @@ Client::Client(int client_socket, bool is_debug, Proxy* proxy) : logger(*(new Lo
     settings.on_headers_complete = onHeadersComplete;
     settings.on_body = onBody;
 
-    ///Initializing parser
+    ///----------------Initializing parser----------------
     http_parser_init(&parser, HTTP_REQUEST);
     parser.data = this;
 

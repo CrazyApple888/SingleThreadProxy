@@ -22,13 +22,20 @@ int Proxy::start(int port) {
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
             auto item = clientsPollFd[i];
-            if (POLLIN == item.revents) {
-                //TODO work with event
-                //testRead(item.fd);
-                handlers.at(item.fd)->execute(item.revents);
+            if (POLLIN & item.revents) {
+                try {
+                    handlers.at(item.fd)->execute(item.revents);
+                } catch (std::out_of_range &exc) {
+                    logger.info(TAG, exc.what());
+                    return EXIT_FAILURE;
+                }
                 item.revents = 0;
             }
-            if ((POLLHUP | POLLIN) == item.revents) {
+            if ((POLLHUP | POLLIN) & item.revents) {
+                disconnectClient(item, i);
+                item.revents = 0;
+            }
+            if ((POLLERR | POLLIN) & item.revents) {
                 disconnectClient(item, i);
                 item.revents = 0;
             }

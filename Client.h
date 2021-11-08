@@ -17,7 +17,14 @@ private:
     http_parser_settings settings{};
     http_parser parser{};
 public:
+    bool is_error;
+    std::string url;
+
     Client(int client_socket, bool is_debug, Proxy *proxy);
+
+    Logger getLogger() { return logger; }
+
+    std::string getTag() { return TAG; }
 
     void execute(int event) override;
 };
