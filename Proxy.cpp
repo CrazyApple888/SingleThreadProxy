@@ -1,4 +1,6 @@
 #include "Proxy.h"
+#include "Client.h"
+#include "Server.h"
 
 Proxy::Proxy(bool is_debug) : logger(*(new Logger(is_debug))) {}
 
@@ -11,16 +13,19 @@ int Proxy::start(int port) {
     initProxyPollFd();
 
     while (poll(clientsPollFd.data(), clientsPollFd.size(), 100000) > 0) {
+        ///New client
         if (POLLIN == clientsPollFd[0].revents) {
             clientsPollFd[0].revents = 0;
             acceptClient();
         }
 
+        ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
             auto item = clientsPollFd[i];
             if (POLLIN == item.revents) {
                 //TODO work with event
-                testRead(item.fd);
+                //testRead(item.fd);
+                handlers.at(item.fd)->execute(item.revents);
                 item.revents = 0;
             }
             if ((POLLHUP | POLLIN) == item.revents) {
@@ -58,7 +63,7 @@ void Proxy::acceptClient() {
         logger.info(TAG, "Can't accept client");
         return;
     }
-    auto client = new Client(client_socket, logger.isDebug());
+    auto client = new Client(client_socket, logger.isDebug(), this);
     handlers.insert(std::make_pair(client_socket, client));
     initClientPollFd(client_socket);
     logger.info(TAG, "Accepted new client with descriptor " + std::to_string(client_socket));

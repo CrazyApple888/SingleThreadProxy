@@ -1,16 +1,11 @@
-//
-// Created by Андрей Исаченко on 07.11.2021.
-//
-
 #include "Server.h"
 
-void Server::execute() {
+void Server::execute(int event) {
 
 }
 
-Server::Server(int server_socket, struct sockaddr server_address, bool is_debug) : logger(*(new Logger(is_debug))) {
+Server::Server(int server_socket, bool is_debug, Proxy* proxy) : logger(*(new Logger(is_debug))), proxy(proxy) {
     this->server_socket = server_socket;
-    this->server_address = server_address;
     TAG = std::string("SERVER " + std::to_string(server_socket));
     logger.debug(TAG, "created");
 }

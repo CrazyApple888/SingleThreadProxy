@@ -3,7 +3,14 @@
 
 /// $ prog_name is_debug
 int main(int argc, char *argv[]) {
-    bool is_debug = (argc == 2 && strcmp("-d", argv[1]) == 0);
+    bool is_debug = (argc == 3 && strcmp("-d", argv[2]) == 0);
+    int port;
+    try {
+        port = std::stoi(argv[1]);
+    } catch (std::exception &exc) {
+        std::cerr << exc.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     auto proxy = new Proxy(is_debug);
-    proxy->start(3444);
+    proxy->start(port);
 }

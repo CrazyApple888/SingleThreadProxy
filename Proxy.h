@@ -16,10 +16,9 @@
 #include <netdb.h>
 #include <sys/un.h>
 #include <algorithm>
+
 #include "Logger.h"
 #include "Handler.h"
-#include "Client.h"
-#include "Server.h"
 
 class Proxy {
 private:
