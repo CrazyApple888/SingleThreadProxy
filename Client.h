@@ -7,6 +7,10 @@
 #include "Logger.h"
 #include "Proxy.h"
 #include "http_parser.h"
+#include "Server.h"
+
+class Proxy;
+class Server;
 
 class Client : public Handler {
 private:
@@ -16,9 +20,14 @@ private:
     Proxy *proxy;
     http_parser_settings settings{};
     http_parser parser{};
+    Server *server;
 public:
-    bool is_error;
     std::string url;
+
+    std::string h_field = "";
+    std::string headers = "";
+
+    Client() = default;
 
     Client(int client_socket, bool is_debug, Proxy *proxy);
 
@@ -26,7 +35,13 @@ public:
 
     std::string getTag() { return TAG; }
 
-    void execute(int event) override;
+    bool execute(int event) override;
+
+    bool createServerConnection(const std::string &host);
+
+    void addServer(Server *ser);
+
+    void sendServerRequest();
 };
 
 

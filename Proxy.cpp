@@ -1,6 +1,6 @@
+//#include "Client.h"
+//#include "Server.h"
 #include "Proxy.h"
-#include "Client.h"
-#include "Server.h"
 
 Proxy::Proxy(bool is_debug) : logger(*(new Logger(is_debug))) {}
 
@@ -22,19 +22,29 @@ int Proxy::start(int port) {
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
             auto item = clientsPollFd[i];
+
             if (POLLIN & item.revents) {
+                bool is_success = false;
                 try {
-                    handlers.at(item.fd)->execute(item.revents);
+                    is_success = handlers.at(item.fd)->execute(item.revents);
                 } catch (std::out_of_range &exc) {
                     logger.info(TAG, exc.what());
                     return EXIT_FAILURE;
                 }
+                if (!is_success) {
+                    logger.debug(TAG, "Execute isn't successful for" + std::to_string(item.fd));
+                    sendErrorMessage(item.fd, E405);
+                    disconnectClient(item, i);
+                    continue;
+                }
                 item.revents = 0;
             }
+
             if ((POLLHUP | POLLIN) & item.revents) {
                 disconnectClient(item, i);
                 item.revents = 0;
             }
+
             if ((POLLERR | POLLIN) & item.revents) {
                 disconnectClient(item, i);
                 item.revents = 0;
@@ -53,11 +63,22 @@ void Proxy::testRead(int fd) {
     logger.info(TAG, buffer);
 }
 
+void Proxy::sendErrorMessage(int socket, HTTP_ERROR type) {
+    switch (type) {
+        case HTTP_ERROR::E405: {
+            write(socket, error_message_405, strlen(error_message_405));
+            break;
+        }
+    }
+}
+
 void Proxy::disconnectClient(struct pollfd client, size_t index) {
     close(client.fd);
+    auto _client = handlers.at(client.fd);
     auto iter = clientsPollFd.begin() + index;
     clientsPollFd.erase(iter);
     handlers.erase(client.fd);
+    delete _client;
     logger.info(TAG, "Disconnected client with descriptor " + std::to_string(client.fd));
 }
 
@@ -129,4 +150,39 @@ int Proxy::initProxySocket() {
 
 Proxy::~Proxy() {
     close(proxy_socket);
+}
+
+bool Proxy::createServerConnection(const std::string &host, Client *client) {
+    logger.info(TAG, host);
+    struct hostent *hostinfo = gethostbyname(host.data());
+    if (nullptr == hostinfo) {
+        return false;
+    }
+
+    int soc;
+    ///PF_INET IPPROTO_TCP
+    if ((soc = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("Error in socket\n");
+        return false;
+    }
+
+    struct sockaddr_in sockaddrIn{};
+    sockaddrIn.sin_family = AF_INET;
+    sockaddrIn.sin_port = htons(80);
+    sockaddrIn.sin_addr = *((struct in_addr *) hostinfo->h_addr);
+
+    if (-1 == (connect(soc, (struct sockaddr *) &sockaddrIn, sizeof(sockaddrIn)))) {
+        return false;
+    }
+
+
+    initClientPollFd(soc);
+    auto server = new Server(soc, logger.isDebug(), this);
+    handlers.insert(std::make_pair(soc, server));
+
+    client->addServer(server);
+
+    logger.info(TAG, "Added server with descriptor " + std::to_string(soc));
+
+    return true;
 }

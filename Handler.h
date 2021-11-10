@@ -4,7 +4,7 @@
 
 class Handler {
 public:
-    virtual void execute(int event) = 0;
+    virtual bool execute(int event) = 0;
     virtual ~Handler() = default;
 };
 

@@ -7,6 +7,8 @@
 #include "Logger.h"
 #include "Proxy.h"
 
+class Proxy;
+
 class Server : public Handler {
 private:
     int server_socket;
@@ -15,7 +17,8 @@ private:
     Proxy *proxy;
 public:
     Server(int server_socket, bool is_debug, Proxy* proxy);
-    void execute(int event) override;
+    bool execute(int event) override;
+    void sendRequest(const char *url, const char* headers) const;
 };
 
 
