@@ -14,7 +14,6 @@ class Server;
 
 class Client : public Handler {
 private:
-    int client_socket;
     std::string TAG;
     Logger logger;
     Proxy *proxy;
@@ -22,6 +21,8 @@ private:
     http_parser parser{};
     Server *server;
 public:
+    //todo make me private
+    int client_socket;
     std::string url;
 
     std::string h_field = "";

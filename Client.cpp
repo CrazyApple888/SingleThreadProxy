@@ -3,7 +3,7 @@
 int onUrl(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     auto client = (Client *) parser->data;
-    std::cout << "ZDAROVA onUrl " << std::endl;
+    //std::cout << "ZDAROVA onUrl " << std::endl;
     if (1u != parser->method && 2u != parser->method) {
         client->getLogger().debug(client->getTag(), "onUrl failed");
         return 1;
@@ -17,7 +17,7 @@ int onUrl(http_parser *parser, const char *at, size_t length) {
 int onHeaderField(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     auto client = (Client *) parser->data;
-    std::cout << "ZDAROVA onHeaderField " << std::string(at, length) << std::endl;
+    //std::cout << "ZDAROVA onHeaderField " << std::string(at, length) << std::endl;
     client->h_field = std::string(at, length);
     return 0;
 }
@@ -27,13 +27,16 @@ int onHeaderValue(http_parser *parser, const char *at, size_t length) {
     auto client = (Client *) parser->data;
     auto value = std::string(at, length);
     if (client->h_field == "Host") {
-        client->createServerConnection(value);
+        if (!client->createServerConnection(value)) {
+            return 1;
+        }
     }
     if ("Connection" == client->h_field) {
         value = "close";
     }
     client->headers.append(client->h_field + ": " + value + "\r\n");
-    std::cout << "ZDAROVA onHeaderValue " << value << std::endl;
+    //std::cout << "ZDAROVA onHeaderValue " << value << std::endl;
+    client->getLogger().debug(client->getTag(), "Parsed header " + client->h_field + ": " + value);
     return 0;
 }
 
@@ -41,7 +44,8 @@ int onHeadersComplete(http_parser *parser) {
     //todo rewrite me
     auto client = (Client *) parser->data;
     client->headers.append("\r\n");
-    std::cout << "ZDAROVA onHeadersComplete " << client->headers << std::endl;
+    //std::cout << "ZDAROVA onHeadersComplete " << client->headers << std::endl;
+    client->getLogger().debug(client->getTag(), "Headers parsed");
     client->sendServerRequest();
     return 0;
 }
@@ -51,7 +55,7 @@ bool Client::execute(int event) {
     char buffer[BUFSIZ];
     auto len = recv(client_socket, buffer, BUFSIZ, 0);
     logger.info(TAG, buffer);
-    if (0 >= len) {
+    if (0 > len) {
         logger.debug(TAG, "len from recv < 0");
         return false;
     }
@@ -60,6 +64,7 @@ bool Client::execute(int event) {
         logger.debug(TAG, "parse errno = " + std::to_string(parser.http_errno));
         return false;
     }
+
     return true;
 }
 
@@ -84,7 +89,7 @@ Client::Client(int client_socket, bool is_debug, Proxy *proxy) : logger(*(new Lo
 }
 
 bool Client::createServerConnection(const std::string &host) {
-    proxy->createServerConnection(host, this);
+    return proxy->createServerConnection(host, this);
 }
 
 void Client::addServer(Server *ser) {

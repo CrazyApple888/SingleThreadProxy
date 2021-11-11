@@ -56,6 +56,8 @@ public:
 
     bool createServerConnection(const std::string& host, Client *client);
 
+    void disconnectSocket(int soc);
+
 };
 
 

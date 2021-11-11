@@ -1,5 +1,3 @@
-//#include "Client.h"
-//#include "Server.h"
 #include "Proxy.h"
 
 Proxy::Proxy(bool is_debug) : logger(*(new Logger(is_debug))) {}
@@ -21,33 +19,42 @@ int Proxy::start(int port) {
 
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
-            auto item = clientsPollFd[i];
 
-            if (POLLIN & item.revents) {
+            //todo maybe ==
+            if (POLLIN & clientsPollFd[i].revents) {
                 bool is_success = false;
                 try {
-                    is_success = handlers.at(item.fd)->execute(item.revents);
+                    is_success = handlers.at(clientsPollFd[i].fd)->execute(clientsPollFd[i].revents);
                 } catch (std::out_of_range &exc) {
                     logger.info(TAG, exc.what());
                     return EXIT_FAILURE;
                 }
                 if (!is_success) {
-                    logger.debug(TAG, "Execute isn't successful for" + std::to_string(item.fd));
-                    sendErrorMessage(item.fd, E405);
-                    disconnectClient(item, i);
+                    logger.debug(TAG, "Execute isn't successful for" + std::to_string(clientsPollFd[i].fd));
+                    //sendErrorMessage(item.fd, E405);
+                    disconnectClient(clientsPollFd[i], i);
+                    clientsPollFd[i].revents = 0;
                     continue;
                 }
-                item.revents = 0;
+
+                if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
+                    logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
+                    disconnectClient(clientsPollFd[i], i);
+                    clientsPollFd[i].revents = 0;
+                }
+
+                clientsPollFd[i].revents = 0;
             }
 
-            if ((POLLHUP | POLLIN) & item.revents) {
-                disconnectClient(item, i);
-                item.revents = 0;
-            }
+//            if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
+//                logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
+//                disconnectClient(clientsPollFd[i], i);
+//                clientsPollFd[i].revents = 0;
+//            }
 
-            if ((POLLERR | POLLIN) & item.revents) {
-                disconnectClient(item, i);
-                item.revents = 0;
+            if ((POLLERR | POLLIN) == clientsPollFd[i].revents) {
+                disconnectClient(clientsPollFd[i], i);
+                clientsPollFd[i].revents = 0;
             }
         }
         logger.debug(TAG, "Poll iteration completed");
@@ -73,11 +80,11 @@ void Proxy::sendErrorMessage(int socket, HTTP_ERROR type) {
 }
 
 void Proxy::disconnectClient(struct pollfd client, size_t index) {
-    close(client.fd);
     auto _client = handlers.at(client.fd);
     auto iter = clientsPollFd.begin() + index;
-    clientsPollFd.erase(iter);
     handlers.erase(client.fd);
+    clientsPollFd.erase(iter);
+    close(client.fd);
     delete _client;
     logger.info(TAG, "Disconnected client with descriptor " + std::to_string(client.fd));
 }
@@ -87,7 +94,7 @@ void Proxy::acceptClient() {
     struct sockaddr_un clientAddress{};
     socklen_t len = sizeof(clientAddress);
     //todo may be made it nonblock
-    if ((client_socket = accept(proxy_socket, (struct sockaddr *) &clientAddress, &len)) < 0) {
+    if ((client_socket = accept(proxy_socket, nullptr, nullptr)) < 0) {
         logger.info(TAG, "Can't accept client");
         return;
     }
@@ -161,8 +168,8 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
 
     int soc;
     ///PF_INET IPPROTO_TCP
-    if ((soc = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("Error in socket\n");
+    if ((soc = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+        logger.info(TAG, "Can't create socket for host" + host);
         return false;
     }
 
@@ -172,6 +179,7 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
     sockaddrIn.sin_addr = *((struct in_addr *) hostinfo->h_addr);
 
     if (-1 == (connect(soc, (struct sockaddr *) &sockaddrIn, sizeof(sockaddrIn)))) {
+        logger.info(TAG, "Can't create connection to " + host);
         return false;
     }
 
@@ -181,8 +189,24 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
     handlers.insert(std::make_pair(soc, server));
 
     client->addServer(server);
+    server->client_soc = client->client_socket;
 
     logger.info(TAG, "Added server with descriptor " + std::to_string(soc));
 
     return true;
+}
+
+void Proxy::disconnectSocket(int soc) {
+    struct pollfd client{};
+    int index = -1;
+    for (int i = 0; i < clientsPollFd.size(); ++i) {
+        if (clientsPollFd[i].fd == soc) {
+            client = clientsPollFd[i];
+            index = i;
+            break;
+        }
+    }
+    if (index != -1) {
+        disconnectClient(client, index);
+    }
 }

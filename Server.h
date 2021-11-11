@@ -16,6 +16,7 @@ private:
     Logger logger;
     Proxy *proxy;
 public:
+    int client_soc;
     Server(int server_socket, bool is_debug, Proxy* proxy);
     bool execute(int event) override;
     void sendRequest(const char *url, const char* headers) const;
