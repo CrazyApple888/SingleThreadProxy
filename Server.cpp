@@ -9,15 +9,23 @@ bool Server::execute(int event) {
     }
     //std::cout << "Received " << len << " bytes" << std::endl;
     //std::cout << "Got answer" << std::endl << buffer << std::endl;
-    logger.info(TAG, "GOT ANSWER, len = " + std::to_string(len));
     //std::cout.write(buffer, len);
     //write(client_soc, buffer, len);
+    logger.info(TAG, "GOT ANSWER, len = " + std::to_string(len));
 
     ssize_t bytes_sent = 0;
     while (bytes_sent != len) {
-        ssize_t sent = send(client_soc, buffer, len, bytes_sent);
+        ssize_t sent = send(client_soc, buffer + bytes_sent, len, 0);
+        if (0 > sent) {
+            return false;
+        }
+        if (0 == sent) {
+            break;
+        }
         bytes_sent += sent;
     }
+
+    logger.debug(TAG, "Answer sent to client " + std::to_string(client_soc));
 
     return true;
 }

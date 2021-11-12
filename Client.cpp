@@ -45,7 +45,7 @@ int onHeadersComplete(http_parser *parser) {
     auto client = (Client *) parser->data;
     client->headers.append("\r\n");
     //std::cout << "ZDAROVA onHeadersComplete " << client->headers << std::endl;
-    client->getLogger().debug(client->getTag(), "Headers parsed");
+    client->getLogger().debug(client->getTag(), "All headers parsed");
     client->sendServerRequest();
     return 0;
 }
@@ -54,8 +54,9 @@ bool Client::execute(int event) {
     //todo rewrite me
     char buffer[BUFSIZ];
     auto len = recv(client_socket, buffer, BUFSIZ, 0);
-    logger.info(TAG, buffer);
-    if (0 > len) {
+    //logger.info(TAG, buffer);
+    //todo >
+    if (0 >= len) {
         logger.debug(TAG, "len from recv < 0");
         return false;
     }

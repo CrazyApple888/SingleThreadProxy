@@ -13,13 +13,14 @@ int Proxy::start(int port) {
     while (poll(clientsPollFd.data(), clientsPollFd.size(), 100000) > 0) {
         ///New client
         if (POLLIN == clientsPollFd[0].revents) {
+            logger.debug(TAG, "Proxy POLLIN " + std::to_string(clientsPollFd[0].revents));
             clientsPollFd[0].revents = 0;
             acceptClient();
         }
 
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
-
+            logger.debug(TAG, "Revent before: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
             //todo maybe ==
             if (POLLIN & clientsPollFd[i].revents) {
                 bool is_success = false;
@@ -40,7 +41,7 @@ int Proxy::start(int port) {
                 if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                     logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                     disconnectClient(clientsPollFd[i], i);
-                    clientsPollFd[i].revents = 0;
+                    //clientsPollFd[i].revents = 0;
                 }
 
                 clientsPollFd[i].revents = 0;
@@ -56,6 +57,9 @@ int Proxy::start(int port) {
                 disconnectClient(clientsPollFd[i], i);
                 clientsPollFd[i].revents = 0;
             }
+
+            logger.debug(TAG, "Revent after: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
+            clientsPollFd[i].revents = 0;
         }
         logger.debug(TAG, "Poll iteration completed");
     }
