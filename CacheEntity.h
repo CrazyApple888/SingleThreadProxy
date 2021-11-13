@@ -4,14 +4,27 @@
 #include <iostream>
 #include <vector>
 
+#include "Logger.h"
+#include "Proxy.h"
+
+class Proxy;
+
 class CacheEntity {
 private:
-    std::vector<uint8_t> record;
+    std::string TAG;
+    std::string data;
     bool is_full = false;
+    Logger logger;
+    Proxy *proxy;
+    std::vector<int> subscribers;
+    void notifySubscribers();
 public:
-    std::vector<uint8_t> getPart(size_t part_size);
+    CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1);
+    std::string getPart(unsigned long start, unsigned long length);
     size_t getRecordSize();
     bool isFull() const;
+    bool expandData(std::string &newData);
+    void subscribe(int soc);
 };
 
 

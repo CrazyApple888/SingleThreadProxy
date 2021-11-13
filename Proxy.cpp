@@ -1,6 +1,8 @@
 #include "Proxy.h"
 
-Proxy::Proxy(bool is_debug) : logger(*(new Logger(is_debug))) {}
+Proxy::Proxy(bool is_debug) : logger(*(new Logger(is_debug))) {
+    this->cache = new Cache(is_debug, this);
+}
 
 int Proxy::start(int port) {
     this->proxy_port = port;
@@ -21,8 +23,8 @@ int Proxy::start(int port) {
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
             logger.debug(TAG, "Revent before: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
-            //todo maybe ==
-            if (POLLIN & clientsPollFd[i].revents) {
+            //todo maybe ==, maybe without POLLOUT
+            if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
                 bool is_success = false;
                 try {
                     is_success = handlers.at(clientsPollFd[i].fd)->execute(clientsPollFd[i].revents);
@@ -72,15 +74,6 @@ void Proxy::testRead(int fd) {
     char buffer[BUFSIZ];
     read(fd, buffer, BUFSIZ);
     logger.info(TAG, buffer);
-}
-
-void Proxy::sendErrorMessage(int socket, HTTP_ERROR type) {
-    switch (type) {
-        case HTTP_ERROR::E405: {
-            write(socket, error_message_405, strlen(error_message_405));
-            break;
-        }
-    }
 }
 
 void Proxy::disconnectClient(struct pollfd client, size_t index) {
@@ -212,5 +205,27 @@ void Proxy::disconnectSocket(int soc) {
     }
     if (index != -1) {
         disconnectClient(client, index);
+    }
+}
+
+void Proxy::notify(int soc) {
+    for(auto &item : clientsPollFd) {
+        if (soc == item.fd) {
+            item.events |= POLLOUT;
+            break;
+        }
+    }
+}
+
+Cache *Proxy::getCache() {
+    return cache;
+}
+
+void Proxy::addCacheToClient(int soc, CacheEntity *cache_entity) {
+    for(auto &item : clientsPollFd) {
+        if (soc == item.fd) {
+            dynamic_cast<Client*>(handlers[soc])->addCache(cache_entity);
+            break;
+        }
     }
 }

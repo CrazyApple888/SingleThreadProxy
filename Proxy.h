@@ -20,32 +20,34 @@
 #include "Logger.h"
 #include "Handler.h"
 #include "Client.h"
-//#include "Server.h"
-
-enum HTTP_ERROR{
-    E405
-};
+#include "Cache.h"
 
 class Client;
+class Cache;
 
 class Proxy {
 private:
-    const char* error_message_405 =  "HTTP/1.0 405 METHOD NOT ALLOWED\r\n\r\n Method Not Allowed";
     Logger logger;
     const std::string TAG = "PROXY";
     const int backlog = 20;
     int proxy_port;
     int proxy_socket;
     std::vector<struct pollfd> clientsPollFd;
-    std::map<int, Handler*> handlers;
+    std::map<int, Handler *> handlers;
+    Cache *cache;
 
     int initProxySocket();
+
     void initProxyPollFd();
+
     void acceptClient();
+
     void initClientPollFd(int socket);
+
     void testRead(int fd);
+
     void disconnectClient(pollfd client, size_t index);
-    void sendErrorMessage(int socket, HTTP_ERROR type);
+
 public:
 
     explicit Proxy(bool is_debug);
@@ -54,9 +56,15 @@ public:
 
     int start(int port);
 
-    bool createServerConnection(const std::string& host, Client *client);
+    bool createServerConnection(const std::string &host, Client *client);
 
     void disconnectSocket(int soc);
+
+    void notify(int soc);
+
+    Cache *getCache();
+
+    void addCacheToClient(int soc, CacheEntity* cache_entity);
 
 };
 

@@ -3,6 +3,7 @@
 
 
 #include <sys/socket.h>
+#include <string>
 #include "Handler.h"
 #include "Logger.h"
 #include "Proxy.h"
@@ -15,11 +16,18 @@ private:
     std::string TAG;
     Logger logger;
     Proxy *proxy;
+    std::string url;
+    bool is_client_subscribed = false;
 public:
     int client_soc;
-    Server(int server_socket, bool is_debug, Proxy* proxy);
+
+    Server(int server_socket, bool is_debug, Proxy *proxy);
+
     bool execute(int event) override;
-    void sendRequest(const char *url, const char* headers) const;
+
+    void sendRequest(const char *url1, const char *headers, const char *method);
+
+    void createCacheEntity();
 };
 
 
