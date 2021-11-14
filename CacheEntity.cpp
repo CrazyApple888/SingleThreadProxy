@@ -46,5 +46,10 @@ void CacheEntity::notifySubscribers() {
 }
 
 void CacheEntity::setFull() {
+    is_in_process = false;
     is_full = true;
+}
+
+bool CacheEntity::isInProcess() const {
+    return is_in_process;
 }

@@ -21,11 +21,11 @@ int Proxy::start(int port) {
         }
 
         ///Checking for new messages from clients
-        auto size = clientsPollFd.size();
-        for (auto i = 1; i < size; i++) {
-            logger.debug(TAG, "Revent before: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
+        for (auto i = 1; i < clientsPollFd.size(); i++) {
             //todo maybe ==, maybe without POLLOUT
             if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
+                std::cout << TAG << "Socket = " << std::to_string(clientsPollFd[i].fd) << " "
+                          << std::bitset<8>(clientsPollFd[i].events) << std::endl;
                 bool is_success = false;
                 try {
                     is_success = handlers.at(clientsPollFd[i].fd)->execute(clientsPollFd[i].revents);
@@ -38,14 +38,12 @@ int Proxy::start(int port) {
                     //sendErrorMessage(item.fd, E405);
                     disconnectClient(clientsPollFd[i], i);
                     clientsPollFd[i].revents = 0;
-                    size--;
                     continue;
                 }
 
                 if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                     logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                     disconnectClient(clientsPollFd[i], i);
-                    size--;
                     //clientsPollFd[i].revents = 0;
                 }
 
@@ -61,7 +59,7 @@ int Proxy::start(int port) {
                 clientsPollFd[i].revents = 0;
             }
 
-            logger.debug(TAG, "Revent after: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
+            //logger.debug(TAG, "Revent after: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
             clientsPollFd[i].revents = 0;
         }
         logger.debug(TAG, "Poll iteration completed");
@@ -81,6 +79,7 @@ void Proxy::disconnectClient(struct pollfd client, size_t index) {
     auto _client = handlers.at(client.fd);
     auto iter = clientsPollFd.begin() + index;
     handlers.erase(client.fd);
+    logger.debug(TAG, "Deleting pollfd with soc = " + std::to_string(iter->fd));
     clientsPollFd.erase(iter);
     close(client.fd);
     delete _client;
@@ -210,7 +209,7 @@ void Proxy::disconnectSocket(int soc) {
 }
 
 void Proxy::notify(int soc) {
-    for(auto &item : clientsPollFd) {
+    for (auto &item: clientsPollFd) {
         if (soc == item.fd) {
             item.events |= POLLOUT;
             break;
@@ -223,27 +222,30 @@ Cache *Proxy::getCache() {
 }
 
 void Proxy::addCacheToClient(int soc, CacheEntity *cache_entity) {
-    logger.debug(TAG, "addCacheToClient");
-    for(auto &item : clientsPollFd) {
+    logger.debug(TAG, "addCacheToClient " + std::to_string(soc));
+    for (auto &item: clientsPollFd) {
         if (soc == item.fd) {
             logger.debug(TAG, "addCacheToClient" + std::string("SOC == FD"));
             try {
                 logger.debug(TAG, "!");
-                dynamic_cast<Client*>(handlers.at(soc))->addCache(cache_entity);
+                auto _client = handlers.at(soc);
                 logger.debug(TAG, "!!");
+                if (_client == nullptr) {
+                    return;
+                }
+                logger.debug(TAG, "!!!");
+                auto aboba = dynamic_cast<Client *>(_client);
+                logger.debug(TAG, "!V");
+                if (aboba == nullptr) {
+                    logger.debug(TAG, "V");
+                }
+                logger.debug(TAG, "V!");
+                aboba->addCache(cache_entity);
+                logger.debug(TAG, "V!!");
             } catch (...) {
-                logger.debug(TAG, /*std::string(exc.what()) +*/ "SOCKET = " + std::to_string(soc));
+                logger.info(TAG, "ADD CACHE TO CLIENT GOT EXCEPTION, SOCKET = " + std::to_string(soc));
                 exit(EXIT_FAILURE);
             }
-            break;
-        }
-    }
-}
-
-void Proxy::disablePollout(int soc) {
-    for (auto &item : clientsPollFd) {
-        if (soc == item.fd) {
-            item.events &= (~POLLOUT);
             break;
         }
     }

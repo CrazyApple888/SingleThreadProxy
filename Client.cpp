@@ -35,7 +35,7 @@ int onHeaderValue(http_parser *parser, const char *at, size_t length) {
         value = "close";
     }
     client->headers.append(client->h_field + ": " + value + "\r\n");
-    client->getLogger().debug(client->getTag(), "Parsed header " + client->h_field + ": " + value);
+    //client->getLogger().debug(client->getTag(), "Parsed header " + client->h_field + ": " + value);
     return 0;
 }
 
@@ -44,6 +44,7 @@ int onHeadersComplete(http_parser *parser) {
     auto client = (Client *) parser->data;
     client->headers.append("\r\n");
     client->getLogger().debug(client->getTag(), "All headers parsed");
+    client->getLogger().debug(client->getTag(), "method = " + std::to_string(parser->method));
     switch (parser->method) {
         case 1u:
             client->method = "GET";
@@ -81,19 +82,13 @@ Client::Client(int client_socket, bool is_debug, Proxy *proxy) : logger(*(new Lo
 
 bool Client::execute(int event) {
     //todo rewrite me
-//    if (is_request_parsed) {
-//        return readAnswer();
-//    } else {
-//        return readRequest();
-//    }
-
     if (event & POLLIN) {
-        logger.debug(TAG, "EXECUTE POLLIN" + std::to_string(event | POLLIN));
+        logger.debug(TAG, "EXECUTE POLLIN, event = " + std::to_string(event | POLLIN));
         return readRequest();
     }
 
     if (event & POLLOUT) {
-        logger.debug(TAG, "EXECUTE POLLOUT" + std::to_string(event | POLLOUT));
+        logger.debug(TAG, "EXECUTE POLLOUT, event = " + std::to_string(event | POLLOUT));
         return readAnswer();
     }
 
@@ -121,7 +116,9 @@ bool Client::readAnswer() {
     logger.info(TAG, "READING FROM CACHE");
     if (nullptr == cached_data) {
         logger.info(TAG, "BROKEN CACHE");
-        return false;
+        //todo
+        return true;
+        //return false;
     }
     auto cache_len = cached_data->getRecordSize();
     size_t read_len;
@@ -168,6 +165,7 @@ void Client::setIsRequestParsed(bool isRequestParsed) {
 }
 
 void Client::addCache(CacheEntity *cache) {
+    logger.debug(TAG, "Trying to add cache");
     cached_data = cache;
     logger.debug(TAG, "Cache added");
 }

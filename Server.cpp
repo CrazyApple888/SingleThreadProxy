@@ -78,12 +78,11 @@ void Server::sendRequest(const char *url1, const char *headers, const char *meth
     get_this.append(" ");
     get_this.append(url);
     get_this.append(" HTTP/1.0\r\n");
+
     auto _headers = std::string(headers);
     get_this.append(_headers);
-    //write(server_socket, get_this.data(), strlen(get_this.data()));
-    //write(server_socket, headers, strlen(headers));
     send(server_socket, get_this.data(), get_this.size(), 0);
-    //send(server_socket, headers, strlen(headers), 0);
     this->url = std::string(url);
-    std::cout << "server sent request:\n" << get_this << "\n" << headers << std::endl;
+
+    //std::cout << "server sent request:\n" << get_this << "\n" << headers << std::endl;
 }
