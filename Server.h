@@ -26,8 +26,6 @@ public:
     bool execute(int event) override;
 
     void sendRequest(const char *url1, const char *headers, const char *method);
-
-    void createCacheEntity();
 };
 
 

@@ -40,7 +40,11 @@ void CacheEntity::subscribe(int soc) {
 }
 
 void CacheEntity::notifySubscribers() {
-    for(auto item : subscribers) {
+    for(auto &item : subscribers) {
         proxy->notify(item);
     }
+}
+
+void CacheEntity::setFull() {
+    is_full = true;
 }

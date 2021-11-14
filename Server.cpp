@@ -1,22 +1,28 @@
 #include "Server.h"
 
 bool Server::execute(int event) {
+    auto cache = proxy->getCache()->getEntity(url);
+    if (cache != nullptr && cache->isFull()) {
+        cache->subscribe(client_soc);
+        proxy->addCacheToClient(client_soc, cache);
+
+        return false;
+    }
     char buffer[BUFSIZ];
     logger.debug(TAG, "EXECUTE");
     auto len = recv(server_socket, buffer, BUFSIZ, 0);
-    if (len <= 0) {
+    if (len < 0) {
         return false;
     }
-    //std::cout << "Received " << len << " bytes" << std::endl;
-    //std::cout << "Got answer" << std::endl << buffer << std::endl;
-    //std::cout.write(buffer, len);
-    //write(client_soc, buffer, len);
+    if (len == 0) {
+        proxy->getCache()->getEntity(url)->setFull();
+    }
     logger.info(TAG, "GOT ANSWER, len = " + std::to_string(len));
 
-    auto cache = proxy->getCache()->getEntity(url);
     auto data = std::string(buffer, len);
     if (cache != nullptr) {
 
+        logger.debug(TAG, "CACHE != NULLPTR");
         if (!is_client_subscribed) {
             cache->subscribe(client_soc);
             proxy->addCacheToClient(client_soc, cache);
@@ -24,9 +30,11 @@ bool Server::execute(int event) {
         }
 
         if (!cache->isFull()) {
+            logger.debug(TAG, "CACHE ISN'T FULL");
             cache->expandData(data);
         } else {
             //todo do smth if cache is full
+            logger.debug(TAG, "CACHE IS FULL");
             cache->subscribe(client_soc);
             proxy->addCacheToClient(client_soc, cache);
             return false;
@@ -38,29 +46,20 @@ bool Server::execute(int event) {
         if (nullptr == cache) {
             return false;
         }
-
+        logger.debug(TAG, "3");
         if (!is_client_subscribed) {
+            logger.debug(TAG, "4");
             cache->subscribe(client_soc);
+            logger.debug(TAG, "5");
             proxy->addCacheToClient(client_soc, cache);
+            logger.debug(TAG, "6");
             is_client_subscribed = true;
         }
 
-        logger.debug(TAG, "3");
+        logger.debug(TAG, "7");
         cache->expandData(data);
-        logger.debug(TAG, "4");
+        logger.debug(TAG, "8");
     }
-
-    /*ssize_t bytes_sent = 0;
-    while (bytes_sent != len) {
-        ssize_t sent = send(client_soc, buffer + bytes_sent, len, 0);
-        if (0 > sent) {
-            return false;
-        }
-        if (0 == sent) {
-            break;
-        }
-        bytes_sent += sent;
-    }*/
 
     logger.debug(TAG, "Answer sent to client " + std::to_string(client_soc));
 
@@ -74,6 +73,7 @@ Server::Server(int server_socket, bool is_debug, Proxy *proxy) : logger(*(new Lo
 }
 
 void Server::sendRequest(const char *url1, const char *headers, const char *method) {
+    this->url = std::string(url1);
     auto get_this = std::string(method);
     get_this.append(" ");
     get_this.append(url);

@@ -25,6 +25,7 @@ public:
     bool isFull() const;
     bool expandData(std::string &newData);
     void subscribe(int soc);
+    void setFull();
 };
 
 

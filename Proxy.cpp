@@ -21,7 +21,8 @@ int Proxy::start(int port) {
         }
 
         ///Checking for new messages from clients
-        for (auto i = 1; i < clientsPollFd.size(); i++) {
+        auto size = clientsPollFd.size();
+        for (auto i = 1; i < size; i++) {
             logger.debug(TAG, "Revent before: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
             //todo maybe ==, maybe without POLLOUT
             if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
@@ -37,24 +38,24 @@ int Proxy::start(int port) {
                     //sendErrorMessage(item.fd, E405);
                     disconnectClient(clientsPollFd[i], i);
                     clientsPollFd[i].revents = 0;
+                    size--;
                     continue;
                 }
 
                 if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                     logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                     disconnectClient(clientsPollFd[i], i);
+                    size--;
                     //clientsPollFd[i].revents = 0;
                 }
 
                 clientsPollFd[i].revents = 0;
             }
-
-//            if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
-//                logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
-//                disconnectClient(clientsPollFd[i], i);
-//                clientsPollFd[i].revents = 0;
-//            }
-
+/*            if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
+                logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
+                disconnectClient(clientsPollFd[i], i);
+                clientsPollFd[i].revents = 0;
+            }*/
             if ((POLLERR | POLLIN) == clientsPollFd[i].revents) {
                 disconnectClient(clientsPollFd[i], i);
                 clientsPollFd[i].revents = 0;
@@ -222,9 +223,27 @@ Cache *Proxy::getCache() {
 }
 
 void Proxy::addCacheToClient(int soc, CacheEntity *cache_entity) {
+    logger.debug(TAG, "addCacheToClient");
     for(auto &item : clientsPollFd) {
         if (soc == item.fd) {
-            dynamic_cast<Client*>(handlers[soc])->addCache(cache_entity);
+            logger.debug(TAG, "addCacheToClient" + std::string("SOC == FD"));
+            try {
+                logger.debug(TAG, "!");
+                dynamic_cast<Client*>(handlers.at(soc))->addCache(cache_entity);
+                logger.debug(TAG, "!!");
+            } catch (...) {
+                logger.debug(TAG, /*std::string(exc.what()) +*/ "SOCKET = " + std::to_string(soc));
+                exit(EXIT_FAILURE);
+            }
+            break;
+        }
+    }
+}
+
+void Proxy::disablePollout(int soc) {
+    for (auto &item : clientsPollFd) {
+        if (soc == item.fd) {
+            item.events &= (~POLLOUT);
             break;
         }
     }

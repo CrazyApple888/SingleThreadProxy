@@ -66,6 +66,8 @@ public:
 
     void addCacheToClient(int soc, CacheEntity* cache_entity);
 
+    void disablePollout(int soc);
+
 };
 
 
