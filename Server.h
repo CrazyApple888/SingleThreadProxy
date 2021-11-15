@@ -4,9 +4,11 @@
 
 #include <sys/socket.h>
 #include <string>
+#include <iostream>
 #include "Handler.h"
-#include "Logger.h"
-#include "Proxy.h"
+#include "CacheEntity.h"
+
+class CacheEntity;
 
 class Proxy;
 
@@ -18,6 +20,7 @@ private:
     Proxy *proxy;
     std::string url;
     bool is_client_subscribed = false;
+    CacheEntity *cache = nullptr;
 public:
     int client_soc;
 

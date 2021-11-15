@@ -15,9 +15,7 @@ public:
 
     Cache(bool is_debug, Proxy *proxy1);
 
-    CacheEntity *getEntity(std::string url);
-
-    bool contains(const std::string &url);
+    CacheEntity *getEntity(const std::string& url);
 
     CacheEntity *createEntity(const std::string &url);
 

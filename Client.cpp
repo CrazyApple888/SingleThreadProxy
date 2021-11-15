@@ -3,7 +3,6 @@
 int onUrl(http_parser *parser, const char *at, size_t length) {
     //todo rewrite me
     auto client = (Client *) parser->data;
-    client->setIsRequestParsed(false);
     if (1u != parser->method && 2u != parser->method) {
         client->getLogger().debug(client->getTag(), "onUrl failed");
         return 1;
@@ -56,7 +55,6 @@ int onHeadersComplete(http_parser *parser) {
             return 1;
     }
     client->sendServerRequest();
-    client->setIsRequestParsed(true);
     return 0;
 }
 
@@ -116,7 +114,6 @@ bool Client::readAnswer() {
     logger.info(TAG, "READING FROM CACHE");
     if (nullptr == cached_data) {
         logger.info(TAG, "BROKEN CACHE");
-        //todo
         return true;
         //return false;
     }
@@ -133,6 +130,7 @@ bool Client::readAnswer() {
     while (bytes_sent != read_len) {
         ssize_t sent = send(client_socket, data.data() + bytes_sent, read_len, 0);
         if (0 > sent) {
+            cached_data->unsubscribe(client_socket);
             return false;
         }
         if (0 == sent) {
@@ -142,6 +140,7 @@ bool Client::readAnswer() {
     }
 
     if (cached_data->isFull() && current_pos == cached_data->getRecordSize()) {
+        cached_data->unsubscribe(client_socket);
         return false;
     }
 
@@ -158,10 +157,6 @@ void Client::addServer(Server *ser) {
 
 void Client::sendServerRequest() {
     server->sendRequest(url.data(), headers.data(), method.data());
-}
-
-void Client::setIsRequestParsed(bool isRequestParsed) {
-    is_request_parsed = isRequestParsed;
 }
 
 void Client::addCache(CacheEntity *cache) {

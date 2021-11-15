@@ -3,7 +3,7 @@
 /**
  * @return On success - Entity, otherwise - nullptr
  **/
-CacheEntity *Cache::getEntity(std::string url) {
+CacheEntity *Cache::getEntity(const std::string& url) {
     try {
         return cached_data.at(url);
     } catch (std::out_of_range &exc) {
@@ -11,20 +11,7 @@ CacheEntity *Cache::getEntity(std::string url) {
     }
 }
 
-/**
- * @param url
- * @return is Entity with url contains in cache
- */
-bool Cache::contains(const std::string &url) {
-    try {
-        cached_data.at(url);
-        return true;
-    } catch (std::out_of_range &exc) {
-        return false;
-    }
-}
-
-CacheEntity* Cache::createEntity(const std::string &url) {
+CacheEntity *Cache::createEntity(const std::string &url) {
     try {
         return cached_data.insert(std::make_pair(url, new CacheEntity(url, logger.isDebug(), proxy))).first->second;
     } catch (std::exception &exc) {

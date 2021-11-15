@@ -24,6 +24,7 @@
 #include "Cache.h"
 
 class Client;
+
 class Cache;
 
 class Proxy {
@@ -65,7 +66,7 @@ public:
 
     Cache *getCache();
 
-    void addCacheToClient(int soc, CacheEntity* cache_entity);
+    void addCacheToClient(int soc, CacheEntity *cache_entity);
 
 };
 

@@ -1,22 +1,27 @@
 #include "Server.h"
 
 bool Server::execute(int event) {
-    auto cache = proxy->getCache()->getEntity(url);
+    logger.debug(TAG, "EXECUTE");
+    //cache = proxy->getCache()->getEntity(url);
     if (cache != nullptr && cache->isFull()) {
+        logger.debug(TAG, "Cache is full, subscribing client");
         cache->subscribe(client_soc);
         proxy->addCacheToClient(client_soc, cache);
 
         return false;
     }
+
     char buffer[BUFSIZ];
-    logger.debug(TAG, "EXECUTE");
     auto len = recv(server_socket, buffer, BUFSIZ, 0);
     if (len < 0) {
+        logger.debug(TAG, "LEN < 0");
         return false;
     }
     if (len == 0) {
-        proxy->getCache()->getEntity(url)->setFull();
+        logger.debug(TAG, "Setting status FULL to cache for " + url);
+        cache->setFull();
     }
+
     logger.info(TAG, "GOT ANSWER, len = " + std::to_string(len));
 
     auto data = std::string(buffer, len);
@@ -39,26 +44,18 @@ bool Server::execute(int event) {
             proxy->addCacheToClient(client_soc, cache);
             return false;
         }
+
     } else {
-        logger.debug(TAG, "1");
         cache = proxy->getCache()->createEntity(url);
-        logger.debug(TAG, "2");
         if (nullptr == cache) {
             return false;
         }
-        logger.debug(TAG, "3");
         if (!is_client_subscribed) {
-            logger.debug(TAG, "4");
             cache->subscribe(client_soc);
-            logger.debug(TAG, "5");
             proxy->addCacheToClient(client_soc, cache);
-            logger.debug(TAG, "6");
             is_client_subscribed = true;
         }
-
-        logger.debug(TAG, "7");
         cache->expandData(data);
-        logger.debug(TAG, "8");
     }
 
     logger.debug(TAG, "Answer sent to client " + std::to_string(client_soc));
@@ -83,6 +80,6 @@ void Server::sendRequest(const char *url1, const char *headers, const char *meth
     get_this.append(_headers);
     send(server_socket, get_this.data(), get_this.size(), 0);
     this->url = std::string(url);
-
+    this->cache = proxy->getCache()->getEntity(url);
     //std::cout << "server sent request:\n" << get_this << "\n" << headers << std::endl;
 }

@@ -8,10 +8,11 @@
 #include "Proxy.h"
 #include "http_parser.h"
 #include "Server.h"
-#include "CacheEntity.h"
 
 class Proxy;
+
 class Server;
+
 class CacheEntity;
 
 class Client : public Handler {
@@ -22,9 +23,11 @@ private:
     http_parser_settings settings{};
     http_parser parser{};
     Server *server;
-    bool is_request_parsed = false;
+
     bool readRequest();
+
     bool readAnswer();
+
     CacheEntity *cached_data = nullptr;
     size_t current_pos = 0;
 public:
@@ -51,7 +54,7 @@ public:
     void addServer(Server *ser);
 
     void sendServerRequest();
-    void setIsRequestParsed(bool isRequestParsed);
+
     void addCache(CacheEntity *cache);
 };
 

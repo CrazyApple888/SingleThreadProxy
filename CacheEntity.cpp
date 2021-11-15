@@ -13,7 +13,7 @@ size_t CacheEntity::getRecordSize() {
 }
 
 /**
- * @param newData part of data
+ * @param newData - part of data
  * @return true on success, false on bad_alloc
  */
 bool CacheEntity::expandData(std::string &newData) {
@@ -27,7 +27,8 @@ bool CacheEntity::expandData(std::string &newData) {
     }
 }
 
-CacheEntity::CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1) : logger(*(new Logger(is_debug))), proxy(proxy1) {
+CacheEntity::CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1) : logger(*(new Logger(is_debug))),
+                                                                                 proxy(proxy1) {
     this->TAG = std::string("CacheEntity ") + url;
     logger.debug(TAG, "created");
 }
@@ -40,7 +41,7 @@ void CacheEntity::subscribe(int soc) {
 }
 
 void CacheEntity::notifySubscribers() {
-    for(auto &item : subscribers) {
+    for (auto &item: subscribers) {
         proxy->notify(item);
     }
 }
@@ -52,4 +53,15 @@ void CacheEntity::setFull() {
 
 bool CacheEntity::isInProcess() const {
     return is_in_process;
+}
+
+void CacheEntity::unsubscribe(int soc) {
+    auto iter = subscribers.begin();
+    for (; iter != subscribers.end(); iter++) {
+        if (soc == (*iter)) {
+            subscribers.erase(iter);
+            logger.debug(TAG, std::to_string(soc) + " is now unsub");
+            break;
+        }
+    }
 }

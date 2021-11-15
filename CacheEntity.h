@@ -17,17 +17,28 @@ private:
     Logger logger;
     Proxy *proxy;
     std::vector<int> subscribers;
+
     void notifySubscribers();
+
     bool is_in_process = true;
 public:
     CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1);
+
     std::string getPart(unsigned long start, unsigned long length);
+
     size_t getRecordSize();
+
     bool isFull() const;
+
     bool expandData(std::string &newData);
+
     void subscribe(int soc);
+
     void setFull();
+
     bool isInProcess() const;
+
+    void unsubscribe(int soc);
 };
 
 

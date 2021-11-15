@@ -229,19 +229,9 @@ void Proxy::addCacheToClient(int soc, CacheEntity *cache_entity) {
             try {
                 logger.debug(TAG, "!");
                 auto _client = handlers.at(soc);
-                logger.debug(TAG, "!!");
-                if (_client == nullptr) {
-                    return;
-                }
+                logger.debug(TAG, "!");
+                dynamic_cast<Client *>(_client)->addCache(cache_entity);
                 logger.debug(TAG, "!!!");
-                auto aboba = dynamic_cast<Client *>(_client);
-                logger.debug(TAG, "!V");
-                if (aboba == nullptr) {
-                    logger.debug(TAG, "V");
-                }
-                logger.debug(TAG, "V!");
-                aboba->addCache(cache_entity);
-                logger.debug(TAG, "V!!");
             } catch (...) {
                 logger.info(TAG, "ADD CACHE TO CLIENT GOT EXCEPTION, SOCKET = " + std::to_string(soc));
                 exit(EXIT_FAILURE);
