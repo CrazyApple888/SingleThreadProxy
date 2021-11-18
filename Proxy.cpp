@@ -157,7 +157,7 @@ Proxy::~Proxy() {
 }
 
 bool Proxy::createServerConnection(const std::string &host, Client *client) {
-    logger.info(TAG, host);
+    logger.info(TAG, "Host = " + host);
     struct hostent *hostinfo = gethostbyname(host.data());
     if (nullptr == hostinfo) {
         return false;
@@ -175,11 +175,12 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
     sockaddrIn.sin_port = htons(80);
     sockaddrIn.sin_addr = *((struct in_addr *) hostinfo->h_addr);
 
+    logger.debug(TAG, "Connecting server to " + host);
     if (-1 == (connect(soc, (struct sockaddr *) &sockaddrIn, sizeof(sockaddrIn)))) {
         logger.info(TAG, "Can't create connection to " + host);
         return false;
     }
-
+    logger.info(TAG, "Connected server to " + host);
 
     initClientPollFd(soc);
     auto server = new Server(soc, logger.isDebug(), this);

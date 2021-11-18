@@ -21,6 +21,7 @@ private:
     std::string url;
     bool is_client_subscribed = false;
     CacheEntity *cache = nullptr;
+    bool is_first_run = true;
 public:
     int client_soc;
 

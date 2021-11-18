@@ -3,13 +3,15 @@
 bool Server::execute(int event) {
     logger.debug(TAG, "EXECUTE");
     //cache = proxy->getCache()->getEntity(url);
-    if (cache != nullptr && cache->isFull()) {
-        logger.debug(TAG, "Cache is full, subscribing client");
-        cache->subscribe(client_soc);
-        proxy->addCacheToClient(client_soc, cache);
-
-        return false;
+    if (cache != nullptr ) {
+        if (cache->isFull() || is_first_run) {
+            logger.debug(TAG, "Cache is full, subscribing client");
+            cache->subscribe(client_soc);
+            proxy->addCacheToClient(client_soc, cache);
+            return false;
+        }
     }
+    is_first_run = false;
 
     char buffer[BUFSIZ];
     auto len = recv(server_socket, buffer, BUFSIZ, 0);
