@@ -2,8 +2,7 @@
 
 bool Server::execute(int event) {
     logger.debug(TAG, "EXECUTE");
-    //cache = proxy->getCache()->getEntity(url);
-    if (cache != nullptr ) {
+    if (cache != nullptr) {
         if (cache->isFull() || is_first_run) {
             logger.debug(TAG, "Cache is full, subscribing client");
             cache->subscribe(client_soc);
@@ -16,6 +15,9 @@ bool Server::execute(int event) {
     char buffer[BUFSIZ];
     auto len = recv(server_socket, buffer, BUFSIZ, 0);
     if (len < 0) {
+        if (cache != nullptr) {
+            cache->setInvalid();
+        }
         logger.debug(TAG, "LEN < 0");
         return false;
     }
@@ -38,9 +40,12 @@ bool Server::execute(int event) {
 
         if (!cache->isFull()) {
             logger.debug(TAG, "CACHE ISN'T FULL");
-            cache->expandData(data);
+            if (!cache->expandData(data)) {
+                logger.info(TAG, "Can't allocate memory for " + url);
+                cache->setInvalid();
+                return false;
+            }
         } else {
-            //todo do smth if cache is full
             logger.debug(TAG, "CACHE IS FULL");
             cache->subscribe(client_soc);
             proxy->addCacheToClient(client_soc, cache);
@@ -50,6 +55,7 @@ bool Server::execute(int event) {
     } else {
         cache = proxy->getCache()->createEntity(url);
         if (nullptr == cache) {
+            logger.info(TAG, "Can't create cache entity for " + url);
             return false;
         }
         if (!is_client_subscribed) {
@@ -57,7 +63,11 @@ bool Server::execute(int event) {
             proxy->addCacheToClient(client_soc, cache);
             is_client_subscribed = true;
         }
-        cache->expandData(data);
+        if (!cache->expandData(data)) {
+            logger.info(TAG, "Can't allocate memory for " + url);
+            cache->setInvalid();
+            return false;
+        }
     }
 
     logger.debug(TAG, "Answer sent to client " + std::to_string(client_soc));
@@ -83,5 +93,4 @@ void Server::sendRequest(const char *url1, const char *headers, const char *meth
     send(server_socket, get_this.data(), get_this.size(), 0);
     this->url = std::string(url);
     this->cache = proxy->getCache()->getEntity(url);
-    //std::cout << "server sent request:\n" << get_this << "\n" << headers << std::endl;
 }

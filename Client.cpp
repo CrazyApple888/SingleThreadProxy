@@ -1,13 +1,11 @@
 #include "Client.h"
 
 int onUrl(http_parser *parser, const char *at, size_t length) {
-    //todo rewrite me
     auto client = (Client *) parser->data;
     if (1u != parser->method && 2u != parser->method) {
         client->getLogger().debug(client->getTag(), "onUrl failed");
         return 1;
     }
-    //todo maybe here
     auto tmp = std::string(at);
     client->url.append(at, length);
     client->getLogger().debug(client->getTag(), "URL=" + client->url);
@@ -34,7 +32,7 @@ int onHeaderValue(http_parser *parser, const char *at, size_t length) {
         value = "close";
     }
     client->headers.append(client->h_field + ": " + value + "\r\n");
-    //client->getLogger().debug(client->getTag(), "Parsed header " + client->h_field + ": " + value);
+
     return 0;
 }
 
@@ -79,7 +77,6 @@ Client::Client(int client_socket, bool is_debug, Proxy *proxy) : logger(*(new Lo
 }
 
 bool Client::execute(int event) {
-    //todo rewrite me
     if (event & POLLIN) {
         logger.debug(TAG, "EXECUTE POLLIN, event = " + std::to_string(event | POLLIN));
         return readRequest();
@@ -114,8 +111,13 @@ bool Client::readAnswer() {
     logger.info(TAG, "READING FROM CACHE");
     if (nullptr == cached_data) {
         logger.info(TAG, "BROKEN CACHE");
-        return true;
-        //return false;
+        //return true;
+        return false;
+    }
+    if (!cached_data->isValid()) {
+        logger.info(TAG, "Cache invalid, shutting down");
+        cached_data->unsubscribe(client_socket);
+        return false;
     }
     auto cache_len = cached_data->getRecordSize();
     size_t read_len;
@@ -131,6 +133,7 @@ bool Client::readAnswer() {
         ssize_t sent = send(client_socket, data.data() + bytes_sent, read_len, 0);
         if (0 > sent) {
             cached_data->unsubscribe(client_socket);
+            logger.debug(TAG, "Unsubing");
             return false;
         }
         if (0 == sent) {
@@ -140,6 +143,7 @@ bool Client::readAnswer() {
     }
 
     if (cached_data->isFull() && current_pos == cached_data->getRecordSize()) {
+        logger.debug(TAG, "Reading completed");
         cached_data->unsubscribe(client_socket);
         return false;
     }

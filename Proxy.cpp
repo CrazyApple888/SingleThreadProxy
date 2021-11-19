@@ -12,7 +12,7 @@ int Proxy::start(int port) {
     }
     initProxyPollFd();
 
-    while (poll(clientsPollFd.data(), clientsPollFd.size(), 100000) > 0) {
+    while (poll(clientsPollFd.data(), clientsPollFd.size(), 10000000) > 0) {
         ///New client
         if (POLLIN == clientsPollFd[0].revents) {
             logger.debug(TAG, "Proxy POLLIN " + std::to_string(clientsPollFd[0].revents));
@@ -24,12 +24,13 @@ int Proxy::start(int port) {
         for (auto i = 1; i < clientsPollFd.size(); i++) {
             //todo maybe ==, maybe without POLLOUT
             if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
-                std::cout << TAG << "Socket = " << std::to_string(clientsPollFd[i].fd) << " "
-                          << std::bitset<8>(clientsPollFd[i].events) << std::endl;
+                /*std::cout << TAG << "Socket = " << std::to_string(clientsPollFd[i].fd) << " "
+                          << std::bitset<8>(clientsPollFd[i].events) << std::endl;*/
                 bool is_success = false;
                 try {
                     is_success = handlers.at(clientsPollFd[i].fd)->execute(clientsPollFd[i].revents);
                 } catch (std::out_of_range &exc) {
+                    logger.info(TAG, R"(GOT FATAL EXCEPTION \/\/\/\/\/\/, SHUTTING DOWN...)");
                     logger.info(TAG, exc.what());
                     return EXIT_FAILURE;
                 }

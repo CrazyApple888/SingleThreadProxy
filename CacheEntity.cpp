@@ -47,12 +47,7 @@ void CacheEntity::notifySubscribers() {
 }
 
 void CacheEntity::setFull() {
-    is_in_process = false;
     is_full = true;
-}
-
-bool CacheEntity::isInProcess() const {
-    return is_in_process;
 }
 
 void CacheEntity::unsubscribe(int soc) {
@@ -64,4 +59,12 @@ void CacheEntity::unsubscribe(int soc) {
             break;
         }
     }
+}
+
+bool CacheEntity::isValid() const {
+    return is_valid;
+}
+
+void CacheEntity::setInvalid() {
+    this->is_valid = false;
 }
