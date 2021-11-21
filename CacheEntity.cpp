@@ -18,6 +18,9 @@ size_t CacheEntity::getRecordSize() {
  */
 bool CacheEntity::expandData(std::string &newData) {
     try {
+        /*if (data.capacity() < data.size() + newData.size()) {
+            data.resize(newData.size() * 3);
+        }*/
         data.append(newData);
         notifySubscribers();
         return true;

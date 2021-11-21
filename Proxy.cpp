@@ -37,8 +37,8 @@ int Proxy::start(int port) {
                 if (!is_success) {
                     logger.debug(TAG, "Execute isn't successful for" + std::to_string(clientsPollFd[i].fd));
                     //sendErrorMessage(item.fd, E405);
-                    disconnectClient(clientsPollFd[i], i);
                     clientsPollFd[i].revents = 0;
+                    disconnectClient(clientsPollFd[i], i);
                     continue;
                 }
 
@@ -214,6 +214,15 @@ void Proxy::notify(int soc) {
     for (auto &item: clientsPollFd) {
         if (soc == item.fd) {
             item.events |= POLLOUT;
+            break;
+        }
+    }
+}
+
+void Proxy::disableSoc(int soc) {
+    for (auto &item: clientsPollFd) {
+        if (soc == item.fd) {
+            item.events &= ~POLLOUT;
             break;
         }
     }

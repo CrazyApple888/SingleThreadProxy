@@ -108,11 +108,12 @@ bool Client::readRequest() {
 }
 
 bool Client::readAnswer() {
-    logger.info(TAG, "READING FROM CACHE");
+    logger.debug(TAG, "READING FROM CACHE");
     if (nullptr == cached_data) {
         logger.info(TAG, "BROKEN CACHE");
-        //return true;
-        return false;
+        proxy->disableSoc(client_socket);
+        return true;
+        //return false;
     }
     if (!cached_data->isValid()) {
         logger.info(TAG, "Cache invalid, shutting down");
@@ -125,6 +126,13 @@ bool Client::readAnswer() {
         read_len = BUFSIZ;
     } else {
         read_len = cache_len - current_pos;
+    }
+    if (read_len == 0) {
+        logger.debug(TAG, "No new data in cache");
+        if (!cached_data->isFull()) {
+            proxy->disableSoc(client_socket);
+        }
+        return true;
     }
     auto data = cached_data->getPart(current_pos, read_len);
     current_pos += read_len;
@@ -146,6 +154,12 @@ bool Client::readAnswer() {
         logger.debug(TAG, "Reading completed");
         cached_data->unsubscribe(client_socket);
         return false;
+    }
+
+    logger.debug(TAG, "Completed reading from cache");
+
+    if (!cached_data->isFull()) {
+        proxy->disableSoc(client_socket);
     }
 
     return true;
