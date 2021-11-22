@@ -25,3 +25,10 @@ Cache::Cache(bool is_debug, Proxy *proxy1) : logger(*(new Logger(is_debug))) {
     this->TAG = std::string("Cache");
     logger.debug(TAG, "created");
 }
+
+Cache::~Cache() {
+    for (auto &item : cached_data) {
+        delete item.second;
+    }
+    delete &logger;
+}

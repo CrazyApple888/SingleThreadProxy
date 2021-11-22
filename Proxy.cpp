@@ -25,8 +25,6 @@ int Proxy::start(int port) {
             logger.debug(TAG, "KAVO");
             //todo maybe ==, maybe without POLLOUT
             if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
-                /*std::cout << TAG << "Socket = " << std::to_string(clientsPollFd[i].fd) << " "
-                          << std::bitset<8>(clientsPollFd[i].events) << std::endl;*/
                 bool is_success = false;
                 try {
                     is_success = handlers.at(clientsPollFd[i].fd)->execute(clientsPollFd[i].revents);
@@ -51,7 +49,7 @@ int Proxy::start(int port) {
 
                 clientsPollFd[i].revents = 0;
             }
-/*            if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
+            /*if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                 logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                 disconnectClient(clientsPollFd[i], i);
                 clientsPollFd[i].revents = 0;
@@ -156,6 +154,8 @@ int Proxy::initProxySocket() {
 
 Proxy::~Proxy() {
     close(proxy_socket);
+    delete cache;
+    delete &logger;
 }
 
 bool Proxy::createServerConnection(const std::string &host, Client *client) {

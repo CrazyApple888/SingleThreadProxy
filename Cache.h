@@ -15,6 +15,8 @@ public:
 
     Cache(bool is_debug, Proxy *proxy1);
 
+    ~Cache();
+
     CacheEntity *getEntity(const std::string& url);
 
     CacheEntity *createEntity(const std::string &url);

@@ -40,6 +40,7 @@ public:
     std::string headers = "";
 
     Client() = default;
+    ~Client();
 
     Client(int client_socket, bool is_debug, Proxy *proxy);
 

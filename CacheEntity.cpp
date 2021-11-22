@@ -22,7 +22,8 @@ bool CacheEntity::expandData(const char* newData, size_t len) {
         if (data.size() + len > data.capacity()) {
             data.resize(data.capacity() + len * 3);
         }
-        data.insert(data.end(), newData, newData + len/* / sizeof(newData[0])*/);
+        data.insert(data.end(), newData, newData + len);
+        //data.insert(data.end(), newData, newData + len / sizeof(newData[0]));
         //data.append(newData);
         notifySubscribers();
         return true;
@@ -72,4 +73,8 @@ bool CacheEntity::isValid() const {
 
 void CacheEntity::setInvalid() {
     this->is_valid = false;
+}
+
+CacheEntity::~CacheEntity() {
+    delete &logger;
 }

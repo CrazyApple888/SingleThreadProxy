@@ -27,6 +27,8 @@ public:
 
     Server(int server_socket, bool is_debug, Proxy *proxy);
 
+    ~Server();
+
     bool execute(int event) override;
 
     void sendRequest(const char *url1, const char *headers, const char *method);

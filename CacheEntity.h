@@ -28,6 +28,8 @@ public:
 
     CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1);
 
+    ~CacheEntity();
+
     const char *getPart(unsigned long start, unsigned long length);
 
     size_t getRecordSize();

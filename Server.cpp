@@ -91,6 +91,9 @@ void Server::sendRequest(const char *url1, const char *headers, const char *meth
     auto _headers = std::string(headers);
     get_this.append(_headers);
     send(server_socket, get_this.data(), get_this.size(), 0);
-    this->url = std::string(url);
     this->cache = proxy->getCache()->getEntity(url);
+}
+
+Server::~Server() {
+    delete &logger;
 }

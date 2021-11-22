@@ -185,3 +185,7 @@ void Client::addCache(CacheEntity *cache) {
     cached_data = cache;
     logger.debug(TAG, "Cache added");
 }
+
+Client::~Client() {
+
+}
