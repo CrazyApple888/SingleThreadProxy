@@ -12,7 +12,7 @@ int Proxy::start(int port) {
     }
     initProxyPollFd();
 
-    while (poll(clientsPollFd.data(), clientsPollFd.size(), 10000000) > 0) {
+    while (poll(clientsPollFd.data(), clientsPollFd.size(), -1) > 0) {
         ///New client
         if (POLLIN == clientsPollFd[0].revents) {
             logger.debug(TAG, "Proxy POLLIN " + std::to_string(clientsPollFd[0].revents));
@@ -22,6 +22,7 @@ int Proxy::start(int port) {
 
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
+            logger.debug(TAG, "KAVO");
             //todo maybe ==, maybe without POLLOUT
             if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
                 /*std::cout << TAG << "Socket = " << std::to_string(clientsPollFd[i].fd) << " "

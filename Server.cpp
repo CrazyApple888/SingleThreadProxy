@@ -28,7 +28,7 @@ bool Server::execute(int event) {
 
     logger.info(TAG, "GOT ANSWER, len = " + std::to_string(len));
 
-    auto data = std::string(buffer, len);
+    //auto data = std::string(buffer, len);
     if (cache != nullptr) {
 
         logger.debug(TAG, "CACHE != NULLPTR");
@@ -40,7 +40,7 @@ bool Server::execute(int event) {
 
         if (!cache->isFull()) {
             logger.debug(TAG, "CACHE ISN'T FULL");
-            if (!cache->expandData(data)) {
+            if (!cache->expandData(buffer, len)) {
                 logger.info(TAG, "Can't allocate memory for " + url);
                 cache->setInvalid();
                 return false;
@@ -63,7 +63,7 @@ bool Server::execute(int event) {
             proxy->addCacheToClient(client_soc, cache);
             is_client_subscribed = true;
         }
-        if (!cache->expandData(data)) {
+        if (!cache->expandData(buffer, len)) {
             logger.info(TAG, "Can't allocate memory for " + url);
             cache->setInvalid();
             return false;

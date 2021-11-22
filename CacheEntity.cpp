@@ -1,7 +1,8 @@
 #include "CacheEntity.h"
 
-std::string CacheEntity::getPart(unsigned long start, unsigned long length) {
-    return data.substr(start, length);
+const char* CacheEntity::getPart(unsigned long start, unsigned long length) {
+    return data.data() + start;
+    //return data.substr(start, length).data();
 }
 
 bool CacheEntity::isFull() const {
@@ -16,12 +17,13 @@ size_t CacheEntity::getRecordSize() {
  * @param newData - part of data
  * @return true on success, false on bad_alloc
  */
-bool CacheEntity::expandData(std::string &newData) {
+bool CacheEntity::expandData(const char* newData, size_t len) {
     try {
-        /*if (data.capacity() < data.size() + newData.size()) {
-            data.resize(newData.size() * 3);
-        }*/
-        data.append(newData);
+        if (data.size() + len > data.capacity()) {
+            data.resize(data.capacity() + len * 3);
+        }
+        data.insert(data.end(), newData, newData + len / sizeof(newData[0]));
+        //data.append(newData);
         notifySubscribers();
         return true;
     } catch (std::bad_alloc &exc) {

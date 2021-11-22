@@ -131,14 +131,17 @@ bool Client::readAnswer() {
         logger.debug(TAG, "No new data in cache");
         if (!cached_data->isFull()) {
             proxy->disableSoc(client_socket);
+        } else {
+            return false;
         }
         return true;
     }
+    logger.debug(TAG, "Read " + std::to_string(read_len) + " bytes");
     auto data = cached_data->getPart(current_pos, read_len);
     current_pos += read_len;
     ssize_t bytes_sent = 0;
     while (bytes_sent != read_len) {
-        ssize_t sent = send(client_socket, data.data() + bytes_sent, read_len, 0);
+        ssize_t sent = send(client_socket, data + bytes_sent, read_len, 0);
         if (0 > sent) {
             cached_data->unsubscribe(client_socket);
             logger.debug(TAG, "Unsubing");

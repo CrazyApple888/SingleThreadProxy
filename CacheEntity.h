@@ -12,7 +12,7 @@ class Proxy;
 class CacheEntity {
 private:
     std::string TAG;
-    std::string data;
+    std::vector<char> data;
     bool is_full = false;
     Logger logger;
     Proxy *proxy;
@@ -28,13 +28,13 @@ public:
 
     CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1);
 
-    std::string getPart(unsigned long start, unsigned long length);
+    const char *getPart(unsigned long start, unsigned long length);
 
     size_t getRecordSize();
 
     bool isFull() const;
 
-    bool expandData(std::string &newData);
+    bool expandData(const char *newData, size_t len);
 
     void subscribe(int soc);
 
