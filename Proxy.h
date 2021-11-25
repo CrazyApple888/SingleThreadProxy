@@ -37,6 +37,7 @@ private:
     std::vector<struct pollfd> clientsPollFd;
     std::map<int, Handler *> handlers;
     Cache *cache;
+    bool is_stopped = false;
 
     int initProxySocket();
 
@@ -51,6 +52,8 @@ private:
     void disconnectClient(pollfd client, size_t index);
 
 public:
+
+    void stop();
 
     explicit Proxy(bool is_debug);
 

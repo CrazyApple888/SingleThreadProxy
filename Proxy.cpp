@@ -12,8 +12,13 @@ int Proxy::start(int port) {
     }
     initProxyPollFd();
 
-    int events_activated = 0;
-    while ((events_activated = poll(clientsPollFd.data(), clientsPollFd.size(), -1)) > 0) {
+    int events_activated;
+    while (!is_stopped) {
+        events_activated = poll(clientsPollFd.data(), clientsPollFd.size(), -1);
+        if (events_activated <= 0) {
+            logger->info(TAG, "EVENTS = " + std::to_string(events_activated));
+            break;
+        }
         logger->debug(TAG, "Events activated = " + std::to_string(events_activated));
         ///New client
         if (POLLIN == clientsPollFd[0].revents) {
@@ -248,4 +253,8 @@ void Proxy::addCacheToClient(int soc, CacheEntity *cache_entity) {
             break;
         }
     }
+}
+
+void Proxy::stop() {
+    is_stopped = true;
 }
