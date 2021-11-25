@@ -30,5 +30,5 @@ Cache::~Cache() {
     for (auto &item: cached_data) {
         delete item.second;
     }
-    delete &logger;
+    delete logger;
 }

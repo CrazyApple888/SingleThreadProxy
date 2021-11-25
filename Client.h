@@ -47,7 +47,7 @@ public:
 
     Client(int client_socket, bool is_debug, Proxy *proxy);
 
-    Logger getLogger() { return logger; }
+    Logger *getLogger() { return logger; }
 
     std::string getTag() { return TAG; }
 

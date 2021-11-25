@@ -95,5 +95,5 @@ void Server::sendRequest(const char *url1, const char *headers, const char *meth
 }
 
 Server::~Server() {
-    delete &logger;
+    delete logger;
 }

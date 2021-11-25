@@ -63,7 +63,7 @@ void CacheEntity::unsubscribe(int soc) {
     for (; iter != subscribers.end(); iter++) {
         if (soc == (*iter)) {
             subscribers.erase(iter);
-            logger.debug(TAG, std::to_string(soc) + " is now unsub");
+            logger->debug(TAG, std::to_string(soc) + " is now unsub");
             break;
         }
     }
@@ -78,5 +78,5 @@ void CacheEntity::setInvalid() {
 }
 
 CacheEntity::~CacheEntity() {
-    delete &logger;
+    delete logger;
 }

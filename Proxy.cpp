@@ -152,7 +152,7 @@ int Proxy::initProxySocket() {
 Proxy::~Proxy() {
     close(proxy_socket);
     delete cache;
-    delete &logger;
+    delete logger;
 }
 
 bool Proxy::createServerConnection(const std::string &host, Client *client) {

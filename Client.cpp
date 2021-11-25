@@ -3,13 +3,13 @@
 int onUrl(http_parser *parser, const char *at, size_t length) {
     auto client = (Client *) parser->data;
     if (1u != parser->method && 2u != parser->method) {
-        client->getLogger().debug(client->getTag(), "onUrl failed");
+        client->getLogger()->debug(client->getTag(), "onUrl failed");
         return 1;
     }
     auto tmp = std::string(at);
     client->url.append(at, length);
-    client->getLogger().debug(client->getTag(), "URL=" + client->url);
-    client->getLogger().debug(client->getTag(), "onUrl successful");
+    client->getLogger()->debug(client->getTag(), "URL=" + client->url);
+    client->getLogger()->debug(client->getTag(), "onUrl successful");
 
     return 0;
 }
@@ -40,8 +40,8 @@ int onHeadersComplete(http_parser *parser) {
     //todo rewrite me
     auto client = (Client *) parser->data;
     client->headers.append("\r\n");
-    client->getLogger().debug(client->getTag(), "All headers parsed");
-    client->getLogger().debug(client->getTag(), "method = " + std::to_string(parser->method));
+    client->getLogger()->debug(client->getTag(), "All headers parsed");
+    client->getLogger()->debug(client->getTag(), "method = " + std::to_string(parser->method));
     switch (parser->method) {
         case 1u:
             client->method = "GET";
@@ -186,5 +186,5 @@ void Client::addCache(CacheEntity *cache) {
 }
 
 Client::~Client() {
-
+    delete logger;
 }
