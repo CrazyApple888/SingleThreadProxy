@@ -1,5 +1,7 @@
 #include "Server.h"
 
+char buffer[BUFSIZ];
+
 bool Server::execute(int event) {
     logger.debug(TAG, "EXECUTE");
     if (cache != nullptr) {
@@ -12,7 +14,7 @@ bool Server::execute(int event) {
     }
     is_first_run = false;
 
-    char buffer[BUFSIZ];
+//    char buffer[BUFSIZ];
     auto len = recv(server_socket, buffer, BUFSIZ, 0);
     if (len < 0) {
         if (cache != nullptr) {

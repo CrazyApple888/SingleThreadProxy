@@ -19,11 +19,13 @@ size_t CacheEntity::getRecordSize() {
  */
 bool CacheEntity::expandData(const char* newData, size_t len) {
     try {
-        if (data.size() + len > data.capacity()) {
-            data.resize(data.capacity() + len * 3);
-        }
+        /*if (data.size() + len > data.capacity()) {
+//            data.resize(data.capacity() + len * 3);
+            data.reserve(data.capacity() + len * 3);
+        }*/
         data.insert(data.end(), newData, newData + len);
-        //data.insert(data.end(), newData, newData + len / sizeof(newData[0]));
+        logger.info(TAG, std::string("cache capacity: ") + std::to_string(data.capacity()));
+//data.insert(data.end(), newData, newData + len / sizeof(newData[0]));
         //data.append(newData);
         notifySubscribers();
         return true;
