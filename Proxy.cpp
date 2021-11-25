@@ -12,7 +12,9 @@ int Proxy::start(int port) {
     }
     initProxyPollFd();
 
-    while (poll(clientsPollFd.data(), clientsPollFd.size(), -1) > 0) {
+    int events_activated = 0;
+    while ((events_activated = poll(clientsPollFd.data(), clientsPollFd.size(), -1)) > 0) {
+        logger.debug(TAG, "Events activated = " + std::to_string(events_activated));
         ///New client
         if (POLLIN == clientsPollFd[0].revents) {
             logger.debug(TAG, "Proxy POLLIN " + std::to_string(clientsPollFd[0].revents));
@@ -36,7 +38,6 @@ int Proxy::start(int port) {
                 if (!is_success) {
                     logger.debug(TAG, "Execute isn't successful for" + std::to_string(clientsPollFd[i].fd));
                     //sendErrorMessage(item.fd, E405);
-                    clientsPollFd[i].revents = 0;
                     disconnectClient(clientsPollFd[i], i);
                     continue;
                 }
@@ -44,22 +45,20 @@ int Proxy::start(int port) {
                 if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                     logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                     disconnectClient(clientsPollFd[i], i);
-                    //clientsPollFd[i].revents = 0;
                 }
 
-                clientsPollFd[i].revents = 0;
+                //clientsPollFd[i].revents = 0;
             }
-            /*if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
+            if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                 logger.info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                 disconnectClient(clientsPollFd[i], i);
-                clientsPollFd[i].revents = 0;
-            }*/
+                //clientsPollFd[i].revents = 0;
+            }
             if ((POLLERR | POLLIN) == clientsPollFd[i].revents) {
                 disconnectClient(clientsPollFd[i], i);
-                clientsPollFd[i].revents = 0;
+                //clientsPollFd[i].revents = 0;
             }
 
-            //logger.debug(TAG, "Revent after: " + std::to_string(clientsPollFd[i].fd) + " " + std::to_string(clientsPollFd[i].revents));
             clientsPollFd[i].revents = 0;
         }
         logger.debug(TAG, "Poll iteration completed");
@@ -76,20 +75,18 @@ void Proxy::testRead(int fd) {
 }
 
 void Proxy::disconnectClient(struct pollfd client, size_t index) {
-    auto _client = handlers.at(client.fd);
-    auto iter = clientsPollFd.begin() + index;
+    //auto _client = handlers.at(client.fd);
     handlers.erase(client.fd);
+    auto iter = clientsPollFd.begin() + index;
     logger.debug(TAG, "Deleting pollfd with soc = " + std::to_string(iter->fd));
     clientsPollFd.erase(iter);
     close(client.fd);
-    delete _client;
+    //delete _client;
     logger.info(TAG, "Disconnected client with descriptor " + std::to_string(client.fd));
 }
 
 void Proxy::acceptClient() {
     int client_socket;
-    struct sockaddr_un clientAddress{};
-    socklen_t len = sizeof(clientAddress);
     //todo may be made it nonblock
     if ((client_socket = accept(proxy_socket, nullptr, nullptr)) < 0) {
         logger.info(TAG, "Can't accept client");
@@ -138,10 +135,10 @@ int Proxy::initProxySocket() {
         return EXIT_FAILURE;
     }
 
-    if (-1 == fcntl(proxy_socket, F_SETFL, O_NONBLOCK)) {
-        close(proxy_socket);
-        return EXIT_FAILURE;
-    }
+//    if (-1 == fcntl(proxy_socket, F_SETFL, O_NONBLOCK)) {
+//        close(proxy_socket);
+//        return EXIT_FAILURE;
+//    }
 
     if (-1 == listen(proxy_socket, backlog)) {
         close(proxy_socket);

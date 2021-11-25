@@ -91,8 +91,8 @@ bool Client::execute(int event) {
 }
 
 bool Client::readRequest() {
-    char buffer[BUFSIZ];
-    auto len = recv(client_socket, buffer, BUFSIZ, 0);
+    //char buffer[BUFSIZ];
+    auto len = recv(client_socket, buffer, BUFFER_SIZE, 0);
     //todo >
     if (0 >= len) {
         logger.debug(TAG, "len from recv <= 0");
@@ -122,8 +122,8 @@ bool Client::readAnswer() {
     }
     auto cache_len = cached_data->getRecordSize();
     size_t read_len;
-    if (cache_len - current_pos > BUFSIZ) {
-        read_len = BUFSIZ;
+    if (cache_len - current_pos > BUFFER_SIZE) {
+        read_len = BUFFER_SIZE;
     } else {
         read_len = cache_len - current_pos;
     }

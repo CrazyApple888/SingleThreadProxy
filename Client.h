@@ -9,6 +9,8 @@
 #include "http_parser.h"
 #include "Server.h"
 
+#define BUFFER_SIZE (BUFSIZ * 5)
+
 class Proxy;
 
 class Server;
@@ -17,6 +19,7 @@ class CacheEntity;
 
 class Client : public Handler {
 private:
+    char buffer[BUFFER_SIZE];
     std::string TAG;
     Logger logger;
     Proxy *proxy;

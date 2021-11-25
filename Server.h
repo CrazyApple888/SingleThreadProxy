@@ -8,12 +8,15 @@
 #include "Handler.h"
 #include "CacheEntity.h"
 
+#define BUFFER_SIZE (BUFSIZ * 5)
+
 class CacheEntity;
 
 class Proxy;
 
 class Server : public Handler {
 private:
+    char buffer[BUFFER_SIZE];
     int server_socket;
     std::string TAG;
     Logger logger;
