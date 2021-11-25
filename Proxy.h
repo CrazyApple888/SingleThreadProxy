@@ -29,7 +29,7 @@ class Cache;
 
 class Proxy {
 private:
-    Logger logger;
+    Logger *logger;
     const std::string TAG = "PROXY";
     const int backlog = 20;
     int proxy_port;

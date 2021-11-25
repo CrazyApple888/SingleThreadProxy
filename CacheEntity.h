@@ -14,7 +14,7 @@ private:
     std::string TAG;
     std::vector<char> data;
     bool is_full = false;
-    Logger logger;
+    Logger *logger;
     Proxy *proxy;
     std::vector<int> subscribers;
     bool is_valid = true;

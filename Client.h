@@ -21,7 +21,7 @@ class Client : public Handler {
 private:
     char buffer[BUFFER_SIZE];
     std::string TAG;
-    Logger logger;
+    Logger *logger;
     Proxy *proxy;
     http_parser_settings settings{};
     http_parser parser{};

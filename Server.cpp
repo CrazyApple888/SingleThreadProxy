@@ -1,10 +1,10 @@
 #include "Server.h"
 
 bool Server::execute(int event) {
-    logger.debug(TAG, "EXECUTE");
+    logger->debug(TAG, "EXECUTE");
     if (cache != nullptr) {
         if (cache->isFull() || is_first_run) {
-            logger.debug(TAG, "Cache is full, subscribing client");
+            logger->debug(TAG, "Cache is full, subscribing client");
             cache->subscribe(client_soc);
             proxy->addCacheToClient(client_soc, cache);
             return false;
@@ -18,20 +18,20 @@ bool Server::execute(int event) {
         if (cache != nullptr) {
             cache->setInvalid();
         }
-        logger.debug(TAG, "LEN < 0");
+        logger->debug(TAG, "LEN < 0");
         return false;
     }
     if (len == 0) {
-        logger.debug(TAG, "Setting status FULL to cache for " + url);
+        logger->debug(TAG, "Setting status FULL to cache for " + url);
         cache->setFull();
     }
 
-    logger.info(TAG, "GOT ANSWER, len = " + std::to_string(len));
+    logger->info(TAG, "GOT ANSWER, len = " + std::to_string(len));
 
     //auto data = std::string(buffer, len);
     if (cache != nullptr) {
 
-        logger.debug(TAG, "CACHE != NULLPTR");
+        logger->debug(TAG, "CACHE != NULLPTR");
         if (!is_client_subscribed) {
             cache->subscribe(client_soc);
             proxy->addCacheToClient(client_soc, cache);
@@ -39,14 +39,14 @@ bool Server::execute(int event) {
         }
 
         if (!cache->isFull()) {
-            logger.debug(TAG, "CACHE ISN'T FULL");
+            logger->debug(TAG, "CACHE ISN'T FULL");
             if (!cache->expandData(buffer, len)) {
-                logger.info(TAG, "Can't allocate memory for " + url);
+                logger->info(TAG, "Can't allocate memory for " + url);
                 cache->setInvalid();
                 return false;
             }
         } else {
-            logger.debug(TAG, "CACHE IS FULL");
+            logger->debug(TAG, "CACHE IS FULL");
             cache->subscribe(client_soc);
             proxy->addCacheToClient(client_soc, cache);
             return false;
@@ -55,7 +55,7 @@ bool Server::execute(int event) {
     } else {
         cache = proxy->getCache()->createEntity(url);
         if (nullptr == cache) {
-            logger.info(TAG, "Can't create cache entity for " + url);
+            logger->info(TAG, "Can't create cache entity for " + url);
             return false;
         }
         if (!is_client_subscribed) {
@@ -64,21 +64,21 @@ bool Server::execute(int event) {
             is_client_subscribed = true;
         }
         if (!cache->expandData(buffer, len)) {
-            logger.info(TAG, "Can't allocate memory for " + url);
+            logger->info(TAG, "Can't allocate memory for " + url);
             cache->setInvalid();
             return false;
         }
     }
 
-    logger.debug(TAG, "Answer sent to client " + std::to_string(client_soc));
+    logger->debug(TAG, "Answer sent to client " + std::to_string(client_soc));
 
     return true;
 }
 
-Server::Server(int server_socket, bool is_debug, Proxy *proxy) : logger(*(new Logger(is_debug))), proxy(proxy) {
+Server::Server(int server_socket, bool is_debug, Proxy *proxy) : logger(new Logger(is_debug)), proxy(proxy) {
     this->server_socket = server_socket;
     TAG = std::string("SERVER " + std::to_string(server_socket));
-    logger.debug(TAG, "created");
+    logger->debug(TAG, "created");
 }
 
 void Server::sendRequest(const char *url1, const char *headers, const char *method) {

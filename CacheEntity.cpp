@@ -24,21 +24,21 @@ bool CacheEntity::expandData(const char *newData, size_t len) {
             data.reserve(data.capacity() + len * 3);
         }*/
         data.insert(data.end(), newData, newData + len);
-        logger.info(TAG, std::string("cache capacity: ") + std::to_string(data.capacity()));
+        logger->info(TAG, std::string("cache capacity: ") + std::to_string(data.capacity()));
 //      data.insert(data.end(), newData, newData + len / sizeof(newData[0]));
         //data.append(newData);
         notifySubscribers();
         return true;
     } catch (std::bad_alloc &exc) {
-        logger.info(TAG, "bad alloc");
+        logger->info(TAG, "bad alloc");
         return false;
     }
 }
 
-CacheEntity::CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1) : logger(*(new Logger(is_debug))),
+CacheEntity::CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1) : logger(new Logger(is_debug)),
                                                                                  proxy(proxy1) {
     this->TAG = std::string("CacheEntity ") + url;
-    logger.debug(TAG, "created");
+    logger->debug(TAG, "created");
 }
 
 void CacheEntity::subscribe(int soc) {

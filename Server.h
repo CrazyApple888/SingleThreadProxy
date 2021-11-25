@@ -19,7 +19,7 @@ private:
     char buffer[BUFFER_SIZE];
     int server_socket;
     std::string TAG;
-    Logger logger;
+    Logger *logger;
     Proxy *proxy;
     std::string url;
     bool is_client_subscribed = false;

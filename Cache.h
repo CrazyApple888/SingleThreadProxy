@@ -8,7 +8,7 @@
 class Cache {
 private:
     std::map<std::string, CacheEntity*> cached_data;
-    Logger logger;
+    Logger *logger;
     std::string TAG;
     Proxy *proxy;
 public:

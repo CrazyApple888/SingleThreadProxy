@@ -56,7 +56,7 @@ int onHeadersComplete(http_parser *parser) {
     return 0;
 }
 
-Client::Client(int client_socket, bool is_debug, Proxy *proxy) : logger(*(new Logger(is_debug))) {
+Client::Client(int client_socket, bool is_debug, Proxy *proxy) : logger(new Logger(is_debug)) {
     ///-------------------Initializing fields-------------------
     this->client_socket = client_socket;
     this->proxy = proxy;
@@ -73,17 +73,17 @@ Client::Client(int client_socket, bool is_debug, Proxy *proxy) : logger(*(new Lo
     http_parser_init(&parser, HTTP_REQUEST);
     parser.data = this;
 
-    logger.debug(TAG, "created and initialized");
+    logger->debug(TAG, "created and initialized");
 }
 
 bool Client::execute(int event) {
     if (event & POLLIN) {
-        logger.debug(TAG, "EXECUTE POLLIN, event = " + std::to_string(event | POLLIN));
+        logger->debug(TAG, "EXECUTE POLLIN, event = " + std::to_string(event | POLLIN));
         return readRequest();
     }
 
     if (event & POLLOUT) {
-        logger.debug(TAG, "EXECUTE POLLOUT, event = " + std::to_string(event | POLLOUT));
+        logger->debug(TAG, "EXECUTE POLLOUT, event = " + std::to_string(event | POLLOUT));
         return readAnswer();
     }
 
@@ -91,16 +91,15 @@ bool Client::execute(int event) {
 }
 
 bool Client::readRequest() {
-    //char buffer[BUFSIZ];
     auto len = recv(client_socket, buffer, BUFFER_SIZE, 0);
     //todo >
     if (0 >= len) {
-        logger.debug(TAG, "len from recv <= 0");
+        logger->debug(TAG, "len from recv <= 0");
         return false;
     }
     auto parsed_len = http_parser_execute(&parser, &settings, buffer, len);
     if (parsed_len != len || 0u != parser.http_errno) {
-        logger.debug(TAG, "parser errno = " + std::to_string(parser.http_errno));
+        logger->debug(TAG, "parser errno = " + std::to_string(parser.http_errno));
         return false;
     }
 
@@ -108,15 +107,15 @@ bool Client::readRequest() {
 }
 
 bool Client::readAnswer() {
-    logger.debug(TAG, "READING FROM CACHE");
+    logger->debug(TAG, "READING FROM CACHE");
     if (nullptr == cached_data) {
-        logger.info(TAG, "BROKEN CACHE");
+        logger->info(TAG, "BROKEN CACHE");
         proxy->disableSoc(client_socket);
         return true;
         //return false;
     }
     if (!cached_data->isValid()) {
-        logger.info(TAG, "Cache invalid, shutting down");
+        logger->info(TAG, "Cache invalid, shutting down");
         cached_data->unsubscribe(client_socket);
         return false;
     }
@@ -128,7 +127,7 @@ bool Client::readAnswer() {
         read_len = cache_len - current_pos;
     }
     if (read_len == 0) {
-        logger.debug(TAG, "No new data in cache");
+        logger->debug(TAG, "No new data in cache");
         if (!cached_data->isFull()) {
             proxy->disableSoc(client_socket);
         } else {
@@ -136,7 +135,7 @@ bool Client::readAnswer() {
         }
         return true;
     }
-    logger.debug(TAG, "Read " + std::to_string(read_len) + " bytes");
+    logger->debug(TAG, "Read " + std::to_string(read_len) + " bytes");
     auto data = cached_data->getPart(current_pos, read_len);
     current_pos += read_len;
     ssize_t bytes_sent = 0;
@@ -144,7 +143,7 @@ bool Client::readAnswer() {
         ssize_t sent = send(client_socket, data + bytes_sent, read_len, 0);
         if (0 > sent) {
             cached_data->unsubscribe(client_socket);
-            logger.debug(TAG, "Unsubing");
+            logger->debug(TAG, "Unsubing");
             return false;
         }
         if (0 == sent) {
@@ -154,12 +153,12 @@ bool Client::readAnswer() {
     }
 
     if (cached_data->isFull() && current_pos == cached_data->getRecordSize()) {
-        logger.debug(TAG, "Reading completed");
+        logger->debug(TAG, "Reading completed");
         cached_data->unsubscribe(client_socket);
         return false;
     }
 
-    logger.debug(TAG, "Completed reading from cache");
+    logger->debug(TAG, "Completed reading from cache");
 
     if (!cached_data->isFull()) {
         proxy->disableSoc(client_socket);
@@ -181,9 +180,9 @@ void Client::sendServerRequest() {
 }
 
 void Client::addCache(CacheEntity *cache) {
-    logger.debug(TAG, "Trying to add cache");
+    logger->debug(TAG, "Trying to add cache");
     cached_data = cache;
-    logger.debug(TAG, "Cache added");
+    logger->debug(TAG, "Cache added");
 }
 
 Client::~Client() {
