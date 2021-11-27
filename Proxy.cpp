@@ -42,7 +42,6 @@ int Proxy::start(int port) {
                 }
                 if (!is_success) {
                     logger->debug(TAG, "Execute isn't successful for" + std::to_string(clientsPollFd[i].fd));
-                    //sendErrorMessage(item.fd, E405);
                     disconnectClient(clientsPollFd[i], i);
                     continue;
                 }
@@ -54,11 +53,11 @@ int Proxy::start(int port) {
 
                 //clientsPollFd[i].revents = 0;
             }
-            if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
+            /*if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
                 logger->info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                 disconnectClient(clientsPollFd[i], i);
                 //clientsPollFd[i].revents = 0;
-            }
+            }*/
             if ((POLLERR | POLLIN) == clientsPollFd[i].revents) {
                 disconnectClient(clientsPollFd[i], i);
                 //clientsPollFd[i].revents = 0;
@@ -104,10 +103,11 @@ void Proxy::acceptClient() {
 }
 
 void Proxy::initClientPollFd(int socket) {
-    struct pollfd client{};
-    client.fd = socket;
-    client.events = POLLIN | POLLHUP;
-    client.revents = 0;
+    struct pollfd client{
+        .fd = socket,
+        .events = POLLIN | POLLHUP,
+        .revents = 0
+    };
 
     clientsPollFd.push_back(client);
 }
@@ -155,7 +155,12 @@ int Proxy::initProxySocket() {
 }
 
 Proxy::~Proxy() {
+    for (auto &item : clientsPollFd) {
+        close(item.fd);
+    }
+    handlers.erase(handlers.begin(), handlers.end());
     close(proxy_socket);
+    clientsPollFd.clear();
     delete cache;
     delete logger;
 }
@@ -168,7 +173,6 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
     }
 
     int soc;
-    ///PF_INET IPPROTO_TCP
     if ((soc = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         logger->info(TAG, "Can't create socket for host" + host);
         return false;

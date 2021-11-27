@@ -28,5 +28,6 @@ int main(int argc, char *argv[]) {
     proxy->start(port);
     delete proxy;
 
+    std::cout << "Work finished" << std::endl;
     return EXIT_SUCCESS;
 }

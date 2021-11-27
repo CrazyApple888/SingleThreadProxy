@@ -78,5 +78,7 @@ void CacheEntity::setInvalid() {
 }
 
 CacheEntity::~CacheEntity() {
+    data.clear();
+    subscribers.clear();
     delete logger;
 }
