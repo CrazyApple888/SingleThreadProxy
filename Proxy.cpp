@@ -6,9 +6,9 @@ Proxy::Proxy(bool is_debug) : logger(new Logger(is_debug)) {
 
 int Proxy::start(int port) {
     this->proxy_port = port;
-    if (EXIT_FAILURE == initProxySocket()) {
+    if (1 == initProxySocket()) {
         logger->info(TAG, "Can't init socket");
-        return EXIT_FAILURE;
+        return 1;
     }
     initProxyPollFd();
 
@@ -38,7 +38,7 @@ int Proxy::start(int port) {
                 } catch (std::out_of_range &exc) {
                     logger->info(TAG, R"(GOT FATAL EXCEPTION \/\/\/\/\/\/, SHUTTING DOWN...)");
                     logger->info(TAG, exc.what());
-                    return EXIT_FAILURE;
+                    return 1;
                 }
                 if (!is_success) {
                     logger->debug(TAG, "Execute isn't successful for" + std::to_string(clientsPollFd[i].fd));
@@ -69,7 +69,7 @@ int Proxy::start(int port) {
     }
 
     logger->info(TAG, "proxy finished");
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 void Proxy::testRead(int fd) {
@@ -126,7 +126,7 @@ int Proxy::initProxySocket() {
 
     if (-1 == proxy_socket) {
         logger->info(TAG, "Can't create socket");
-        return EXIT_FAILURE;
+        return 1;
     }
 
     struct sockaddr_in proxy_addr{};
@@ -137,7 +137,7 @@ int Proxy::initProxySocket() {
     if (-1 == bind(proxy_socket, (sockaddr *) (&proxy_addr), sizeof(proxy_addr))) {
         close(proxy_socket);
         logger->info(TAG, "Can't bind socket");
-        return EXIT_FAILURE;
+        return 1;
     }
 
 //    if (-1 == fcntl(proxy_socket, F_SETFL, O_NONBLOCK)) {
@@ -148,10 +148,10 @@ int Proxy::initProxySocket() {
     if (-1 == listen(proxy_socket, backlog)) {
         close(proxy_socket);
         logger->info(TAG, "Can't listen socket");
-        return EXIT_FAILURE;
+        return 1;
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 Proxy::~Proxy() {
