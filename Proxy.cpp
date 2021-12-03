@@ -158,6 +158,9 @@ Proxy::~Proxy() {
     for (auto &item : clientsPollFd) {
         close(item.fd);
     }
+    for (auto i = 0; i < handlers.size(); i++) {
+        delete handlers[i];
+    }
     handlers.erase(handlers.begin(), handlers.end());
     close(proxy_socket);
     clientsPollFd.clear();
@@ -186,6 +189,8 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
     logger->debug(TAG, "Connecting server to " + host);
     if (-1 == (connect(soc, (struct sockaddr *) &sockaddrIn, sizeof(sockaddrIn)))) {
         logger->info(TAG, "Can't create connection to " + host);
+        //--
+        free(hostinfo);
         return false;
     }
     logger->info(TAG, "Connected server to " + host);
@@ -199,6 +204,8 @@ bool Proxy::createServerConnection(const std::string &host, Client *client) {
 
     logger->info(TAG, "Added server with descriptor " + std::to_string(soc));
 
+    //
+    free(hostinfo);
     return true;
 }
 

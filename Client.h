@@ -34,7 +34,7 @@ private:
     CacheEntity *cached_data = nullptr;
     size_t current_pos = 0;
 public:
-    //todo make me private
+
     int client_socket;
     std::string url;
     std::string method;
