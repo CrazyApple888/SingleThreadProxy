@@ -5,9 +5,6 @@
 #include <vector>
 
 #include "Logger.h"
-#include "Proxy.h"
-
-class Proxy;
 
 class CacheEntity {
 private:
@@ -15,18 +12,21 @@ private:
     std::vector<char> data;
     bool is_full = false;
     Logger *logger;
-    Proxy *proxy;
     std::vector<int> subscribers;
     bool is_valid = true;
-
-    void notifySubscribers();
+    bool _isUpdated = false;
 
 public:
+
+    std::vector<int> &getSubscribers();
+
+    bool isUpdated();
+
     bool isValid() const;
 
     void setInvalid();
 
-    CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1);
+    CacheEntity(const std::string &url, bool is_debug);
 
     ~CacheEntity();
 

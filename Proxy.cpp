@@ -1,10 +1,13 @@
 #include "Proxy.h"
 
 Proxy::Proxy(bool is_debug) : logger(new Logger(is_debug)) {
-    this->cache = new Cache(is_debug, this);
+    this->cache = new Cache(is_debug);
 }
 
 int Proxy::start(int port) {
+
+    std::vector<int> subs;
+
     this->proxy_port = port;
     if (1 == initProxySocket()) {
         logger->info(TAG, "Can't init socket");
@@ -50,22 +53,21 @@ int Proxy::start(int port) {
                     logger->info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
                     disconnectClient(clientsPollFd[i], i);
                 }
-
-                //clientsPollFd[i].revents = 0;
             }
-            /*if ((POLLHUP | POLLIN) == clientsPollFd[i].revents) {
-                logger->info(TAG, "POLLHUP | POLLIN " + std::to_string(clientsPollFd[i].revents));
-                disconnectClient(clientsPollFd[i], i);
-                //clientsPollFd[i].revents = 0;
-            }*/
             if ((POLLERR | POLLIN) == clientsPollFd[i].revents) {
                 disconnectClient(clientsPollFd[i], i);
-                //clientsPollFd[i].revents = 0;
             }
 
             clientsPollFd[i].revents = 0;
         }
         logger->debug(TAG, "Poll iteration completed");
+
+        cache->getUpdatedSubs(subs);
+        for (auto sub : subs) {
+            notify(sub);
+        }
+        subs.clear();
+
     }
 
     logger->info(TAG, "proxy finished");

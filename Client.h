@@ -15,8 +15,6 @@ class Proxy;
 
 class Server;
 
-class CacheEntity;
-
 class Client : public Handler {
 private:
     char buffer[BUFFER_SIZE];

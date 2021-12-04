@@ -2,7 +2,6 @@
 
 const char *CacheEntity::getPart(unsigned long start, unsigned long length) {
     return data.data() + start;
-    //return data.substr(start, length).data();
 }
 
 bool CacheEntity::isFull() const {
@@ -19,15 +18,9 @@ size_t CacheEntity::getRecordSize() {
  */
 bool CacheEntity::expandData(const char *newData, size_t len) {
     try {
-        /*if (data.size() + len > data.capacity()) {
-            //data.resize(data.capacity() + len * 3);
-            data.reserve(data.capacity() + len * 3);
-        }*/
         data.insert(data.end(), newData, newData + len);
         logger->info(TAG, std::string("cache capacity: ") + std::to_string(data.capacity()));
-//      data.insert(data.end(), newData, newData + len / sizeof(newData[0]));
-        //data.append(newData);
-        notifySubscribers();
+        _isUpdated = true;
         return true;
     } catch (std::bad_alloc &exc) {
         logger->info(TAG, "bad alloc");
@@ -35,8 +28,7 @@ bool CacheEntity::expandData(const char *newData, size_t len) {
     }
 }
 
-CacheEntity::CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1) : logger(new Logger(is_debug)),
-                                                                                 proxy(proxy1) {
+CacheEntity::CacheEntity(const std::string &url, bool is_debug) : logger(new Logger(is_debug)) {
     this->TAG = std::string("CacheEntity ") + url;
     logger->debug(TAG, "created");
 }
@@ -44,13 +36,7 @@ CacheEntity::CacheEntity(const std::string &url, bool is_debug, Proxy *proxy1) :
 void CacheEntity::subscribe(int soc) {
     subscribers.push_back(soc);
     if (is_full) {
-        notifySubscribers();
-    }
-}
-
-void CacheEntity::notifySubscribers() {
-    for (auto &item: subscribers) {
-        proxy->notify(item);
+        //notifySubscribers();
     }
 }
 
@@ -81,4 +67,17 @@ CacheEntity::~CacheEntity() {
     data.clear();
     subscribers.clear();
     delete logger;
+}
+
+std::vector<int> &CacheEntity::getSubscribers() {
+    _isUpdated = false;
+    return subscribers;
+}
+
+bool CacheEntity::isUpdated() {
+    if (!subscribers.empty() && (is_full || _isUpdated)) {
+        return true;
+    } else {
+        return false;
+    }
 }

@@ -5,12 +5,12 @@
 #include <sys/socket.h>
 #include <string>
 #include <iostream>
+
 #include "Handler.h"
 #include "CacheEntity.h"
+#include "Proxy.h"
 
 #define BUFFER_SIZE (BUFSIZ * 5)
-
-class CacheEntity;
 
 class Proxy;
 
