@@ -37,7 +37,6 @@ int onHeaderValue(http_parser *parser, const char *at, size_t length) {
 }
 
 int onHeadersComplete(http_parser *parser) {
-    //todo rewrite me
     auto client = (Client *) parser->data;
     client->headers.append("\r\n");
     client->getLogger()->debug(client->getTag(), "All headers parsed");
@@ -92,7 +91,6 @@ bool Client::execute(int event) {
 
 bool Client::readRequest() {
     auto len = recv(client_socket, buffer, BUFFER_SIZE, 0);
-    //todo >
     if (0 >= len) {
         logger->debug(TAG, "len from recv <= 0");
         return false;

@@ -33,7 +33,6 @@ int Proxy::start(int port) {
         ///Checking for new messages from clients
         for (auto i = 1; i < clientsPollFd.size(); i++) {
             logger->debug(TAG, "KAVO");
-            //todo maybe ==, maybe without POLLOUT
             if ((POLLIN | POLLOUT) & clientsPollFd[i].revents) {
                 bool is_success = false;
                 try {
@@ -93,7 +92,6 @@ void Proxy::disconnectClient(struct pollfd client, size_t index) {
 
 void Proxy::acceptClient() {
     int client_socket;
-    //todo may be made it nonblock
     if ((client_socket = accept(proxy_socket, nullptr, nullptr)) < 0) {
         logger->info(TAG, "Can't accept client");
         return;
